@@ -1,0 +1,19 @@
+{
+  "hasSrc": true,
+  "packages": [
+    "drizzle",
+    "trpc",
+    "shadcn-ui",
+    "clerk",
+    "resend"
+  ],
+  "preferredPackageManager": "npm",
+  "t3": true,
+  "alias": "~",
+  "rootPath": "src/",
+  "orm": "drizzle",
+  "provider": "planetscale",
+  "driver": "mysql",
+  "componentLib": "shadcn-ui",
+  "auth": "clerk"
+}
