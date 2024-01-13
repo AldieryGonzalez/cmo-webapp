@@ -26,7 +26,7 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
       {/* md + Nav */}
       <div className="flex items-center justify-start gap-6">
         <NavLink
-          href="/home"
+          href="/"
           className="hidden text-base font-medium text-white md:block"
         >
           Dashboard
@@ -100,7 +100,7 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/home">Dashboard</Link>
+                <Link href="/">Dashboard</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/shifts">Shifts</Link>

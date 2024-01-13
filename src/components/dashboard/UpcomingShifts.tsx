@@ -1,15 +1,17 @@
-import { type CmoEvent } from "~/lib/gcal/CmoEvent";
 import DashboardShiftCard from "./DashboardShiftCard";
+import { type EventsOutput } from "~/server/api/routers/events";
 
 type Props = {
-  events: CmoEvent[];
+  events: EventsOutput["getEvents"];
 };
 
 const UpcomingShifts = ({ events }: Props) => {
   const upcomingShifts = events.filter((event) => {
     return event.inEvent("Aldi G.");
-    // return event.start.isBefore(momen);
   });
+  if (upcomingShifts.length === 0) {
+    return <h3>No upcoming shifts</h3>;
+  }
   return (
     <div className="flex snap-x snap-mandatory scroll-p-4 gap-5 overflow-y-visible overflow-x-scroll pb-2">
       {upcomingShifts.map((event) => {

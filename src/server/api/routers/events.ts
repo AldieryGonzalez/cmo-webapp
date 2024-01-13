@@ -7,9 +7,34 @@ import { createTRPCRouter, protectedGapiProcedure } from "~/server/api/trpc";
 // import { events, shifts } from "~/server/db/schema";
 
 export const eventRouter = createTRPCRouter({
-  getEvents: protectedGapiProcedure.query(async ({ ctx }) => {
-    return await ctx.calendar.events.list();
-  }),
+  getEvents: protectedGapiProcedure
+    .input(
+      z.object({
+        start: z.date().default(new Date()),
+        end: z.date().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const start = input.start.toISOString();
+      const end = input.end?.toISOString() ?? undefined;
+      const { data } = await ctx.calendar.events.list({
+        timeMin: start,
+        timeMax: end,
+        orderBy: "startTime",
+        singleEvents: true,
+      });
+      const gcalEvents = data.items;
+      if (!gcalEvents) {
+        throw new TRPCError({
+          message: "FAILED TO GET GCAL EVENTS",
+          code: "INTERNAL_SERVER_ERROR",
+        });
+      }
+      const res = gcalEvents.map((event) => {
+        return new CmoEvent(event);
+      });
+      return res;
+    }),
   getApiEvents: protectedGapiProcedure
     .input(
       z.object({
