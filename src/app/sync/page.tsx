@@ -115,9 +115,14 @@ type ShiftCardProps = {
 const ShiftCard: React.FC<ShiftCardProps> = ({ shift }) => {
   return (
     <li className="rounded-full border-2 border-purple-900/5 px-4 py-2">
-      {shift.isFilled ? shift.filledBy : "(open)"} ({shift.role}) -{" "}
-      {shift.start.toLocaleTimeString()} {shift.end.toLocaleTimeString()}
-      {shift.confirmationNote && ` - ${shift.confirmationNote}`}
+      <div>
+        {shift.isFilled ? shift.filledBy : "(open)"} ({shift.role}) -{" "}
+        {shift.start.toLocaleTimeString()} {shift.end.toLocaleTimeString()}
+        {shift.confirmationNote && ` - ${shift.confirmationNote}`}
+      </div>
+      <p className="text-xs font-semibold">
+        {shift.user ?? "Not in system yet"}
+      </p>
     </li>
   );
 };

@@ -56,12 +56,11 @@ export const shiftsRelations = relations(shifts, ({ one }) => ({
 
 export const users = mysqlTable("user", {
   email: varchar("email", { length: 255 }).notNull().primaryKey(),
-  name: varchar("name", { length: 255 }),
-  emailVerified: timestamp("emailVerified", {
-    mode: "date",
-    fsp: 3,
-  }).default(sql`CURRENT_TIMESTAMP(3)`),
+  firstName: varchar("name", { length: 255 }),
+  lastName: varchar("lastName", { length: 255 }),
+  phoneNumber: varchar("phoneNumber", { length: 255 }),
   image: varchar("image", { length: 255 }),
+  alternativeNames: text("alternativeNames"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
