@@ -60,7 +60,7 @@ export const users = mysqlTable("user", {
   lastName: varchar("lastName", { length: 255 }),
   phoneNumber: varchar("phoneNumber", { length: 255 }),
   image: varchar("image", { length: 255 }),
-  alternativeNames: text("alternativeNames"),
+  alternativeNames: varchar("alternativeNames", { length: 255 }),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
