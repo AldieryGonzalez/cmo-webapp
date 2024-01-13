@@ -1,4 +1,4 @@
-import type { CmoEvent } from "@/utilities/classes/CmoEvent";
+import type { CmoEvent } from "~/lib/gcal/CmoEvent";
 import DashboardShiftCard from "./DashboardShiftCard";
 
 type Props = {
