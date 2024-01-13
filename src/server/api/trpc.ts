@@ -130,7 +130,6 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
 
 /** Reusable middleware for piping a api clients to trpc procedures */
 const googleApiMiddleware = t.middleware(async ({ ctx, next }) => {
-  console.log(ctx);
   if (!ctx.auth.session || !ctx.auth.user) {
     throw new TRPCError({
       message: "NO SESSION/USER FOUND",

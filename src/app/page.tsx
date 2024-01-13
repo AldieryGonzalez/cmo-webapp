@@ -1,24 +1,19 @@
-import { addDays } from "date-fns";
+// import { addDays } from "date-fns";
 import DashboardMessages from "~/components/dashboard/DashboardMessages";
-import PastShifts from "~/components/dashboard/PastShifts";
-import UpcomingShifts from "~/components/dashboard/UpcomingShifts";
+// import PastShifts from "~/components/dashboard/PastShifts";
+// import UpcomingShifts from "~/components/dashboard/UpcomingShifts";
 
-import { api } from "~/trpc/server";
+// import { api } from "~/trpc/server";
 
 export default async function Home() {
   // const { data } = await api.post.getEvents.query();
-  const startDate = new Date();
-  const endDate = addDays(startDate, 7);
-  const data = await api.events.syncEvents.mutate({
-    start: startDate,
-    end: endDate,
-  });
-  console.log(
-    "Event: ",
-    data[0]?.event,
-    "Shift1: ",
-    data[0]?.shifts[0]?.start.toLocaleString(),
-  );
+  // const startDate = new Date();
+  // const endDate = addDays(startDate, 7);
+  // const data = await api.events.getApiEvents.query({
+  //   start: startDate,
+  //   end: endDate,
+  // });
+
   // const { items } = data;
   // if (items)
   return (
