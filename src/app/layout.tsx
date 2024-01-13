@@ -38,9 +38,7 @@ export default function RootLayout({
             <ClerkProvider>
               <div>
                 <Navbar />
-                <main className="mx-auto mt-4 max-w-3xl px-4 md:p-0">
-                  {children}
-                </main>
+                <main className="mx-auto mt-4 px-4 md:p-0">{children}</main>
               </div>
             </ClerkProvider>
 
