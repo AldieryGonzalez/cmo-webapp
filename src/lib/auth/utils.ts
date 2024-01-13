@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 export type AuthSession = {
@@ -13,19 +13,16 @@ export type AuthSession = {
 
 export const getUserAuth = async () => {
   // find out more about setting up 'sessionClaims' (custom sessions) here: https://clerk.com/docs/backend-requests/making/custom-session-token
-  const { userId, sessionClaims } = auth();
-  if (userId) {
+  const { userId, sessionId } = auth();
+  if (userId && sessionId) {
+    const session = await clerkClient.sessions.getSession(sessionId);
+    const user = await clerkClient.users.getUser(userId);
     return {
-      session: {
-        user: {
-          id: userId,
-          name: `${sessionClaims?.firstName} ${sessionClaims?.lastName}`,
-          email: sessionClaims?.email,
-        },
-      },
-    } as AuthSession;
+      session,
+      user,
+    };
   } else {
-    return { session: null };
+    return { session: null, user: null };
   }
 };
 

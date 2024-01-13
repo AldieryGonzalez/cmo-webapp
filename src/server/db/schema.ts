@@ -1,11 +1,10 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
-  bigint,
-  index,
   mysqlTableCreator,
+  text,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -18,17 +17,53 @@ import {
  */
 export const mysqlTable = mysqlTableCreator((name) => `cmo-webapp_${name}`);
 
-export const posts = mysqlTable(
-  "post",
-  {
-    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-    name: varchar("name", { length: 256 }),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updatedAt").onUpdateNow(),
-  },
-  (example) => ({
-    nameIndex: index("name_idx").on(example.name),
-  })
-);
+export const events = mysqlTable("event", {
+  id: varchar("id", { length: 256 }).primaryKey().notNull(),
+  title: varchar("title", { length: 256 }).notNull(),
+  createdByEmail: varchar("createdByEmail", { length: 255 }).notNull(),
+  location: varchar("location", { length: 256 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedAt: timestamp("updatedAt").onUpdateNow(),
+  start: timestamp("start").notNull(),
+  end: timestamp("end").notNull(),
+});
+
+export const eventsRelations = relations(events, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [events.createdByEmail],
+    references: [users.email],
+  }),
+  shifts: many(shifts),
+}));
+
+export const shifts = mysqlTable("shift", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  eventId: varchar("eventId", { length: 255 }).notNull(),
+  userEmail: varchar("userEmail", { length: 255 }),
+  role: varchar("role", { length: 255 }).notNull(),
+  start: timestamp("start").notNull(),
+  end: timestamp("end").notNull(),
+  confirmationNote: text("confirmationNote"),
+});
+
+export const shiftsRelations = relations(shifts, ({ one }) => ({
+  users: one(users, { fields: [shifts.userEmail], references: [users.email] }),
+  events: one(events, { fields: [shifts.eventId], references: [events.id] }),
+}));
+
+export const users = mysqlTable("user", {
+  email: varchar("email", { length: 255 }).notNull().primaryKey(),
+  name: varchar("name", { length: 255 }),
+  emailVerified: timestamp("emailVerified", {
+    mode: "date",
+    fsp: 3,
+  }).default(sql`CURRENT_TIMESTAMP(3)`),
+  image: varchar("image", { length: 255 }),
+});
+
+export const usersRelations = relations(users, ({ many }) => ({
+  shifts: many(shifts),
+}));

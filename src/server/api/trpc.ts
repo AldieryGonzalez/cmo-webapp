@@ -148,6 +148,7 @@ const googleApiMiddleware = t.middleware(async ({ ctx, next }) => {
     headers: { Authorization: `Bearer ${token}` },
     params: {
       calendarId: env.GOOGLE_CALENDAR_ID,
+      order: "startTime",
     },
   });
   const gmail = GmailClient({

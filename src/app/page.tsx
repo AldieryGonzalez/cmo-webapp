@@ -1,26 +1,39 @@
-import { Button } from "~/components/ui/button";
-import { getUserAuth } from "~/lib/auth/utils";
-import Link from "next/link";
+import { addDays } from "date-fns";
+import DashboardMessages from "~/components/dashboard/DashboardMessages";
+import PastShifts from "~/components/dashboard/PastShifts";
+import UpcomingShifts from "~/components/dashboard/UpcomingShifts";
+
 import { api } from "~/trpc/server";
 
 export default async function Home() {
-  const userAuth = await getUserAuth();
-  const { data } = await api.post.getEvents.query();
-  const { items } = data;
-  if (items)
-    return (
-      <main className="space-y-6">
-        <Link href="/account">
-          <Button variant="outline">Account and Billing</Button>
-        </Link>
-        <pre className="rounded-sm bg-card p-4">
-          {JSON.stringify(userAuth, null, 2)}
-        </pre>
-        <div>
-          {items.map((item) => {
-            return <p key={item.id}>{item.description}</p>;
-          })}
-        </div>
-      </main>
-    );
+  // const { data } = await api.post.getEvents.query();
+  const startDate = new Date();
+  const endDate = addDays(startDate, 7);
+  const data = await api.events.syncEvents.mutate({
+    start: startDate,
+    end: endDate,
+  });
+  console.log(
+    "Event: ",
+    data[0]?.event,
+    "Shift1: ",
+    data[0]?.shifts[0]?.start.toLocaleString(),
+  );
+  // const { items } = data;
+  // if (items)
+  return (
+    <div className="row-span-1 grid h-full grid-cols-1 grid-rows-[max-content_max-content_1fr] px-8 pt-3">
+      <div className="">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+      </div>
+      <div className="w-full">
+        <h3 className="text-xl font-normal">Upcoming Shifts</h3>
+        {/* <UpcomingShifts events={data} /> */}
+      </div>
+      <div className="flex gap-4 overflow-auto p-2">
+        <DashboardMessages />
+        {/* <PastShifts events={data} /> */}
+      </div>
+    </div>
+  );
 }
