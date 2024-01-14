@@ -1,61 +1,78 @@
 import React, { useState } from "react";
-import { Input, InputProps } from "../ui/input";
+import { Input, type InputProps } from "~/components/ui/input";
 import { SearchIcon, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
-import { DatePickerWithRange } from "../DateRangePicker";
-import { DateRange } from "react-day-picker";
-import { Label } from "../ui/label";
+} from "~/components/ui/sheet";
+import { DateRangePicker } from "~/components/ui/date-range-picker";
+import { type DateRange } from "react-day-picker";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { SetURLSearchParams } from "react-router-dom";
-import { getDateRangeFromSearchParams } from "@/utilities/dateUtils";
+} from "~/components/ui/select";
+import { getDateRangeFromSearchParams } from "~/lib/gcal/utils";
+import { usePathname, useRouter } from "next/navigation";
 
 export type SearchProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 interface SearchBarProps extends InputProps {
-  searchParams: URLSearchParams;
-  setSearchParams: SetURLSearchParams;
+  searchParams: Record<string, string | undefined>;
 }
 
 const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
-  ({ className, searchParams, setSearchParams, ...props }, ref) => {
-    const [control, setControl] = useState(searchParams.get("search") || "");
-    const [control2, setControl2] = useState(searchParams.get("where") || "");
-    const dateRange = getDateRangeFromSearchParams(searchParams);
+  ({ className, searchParams, ...props }, ref) => {
+    const router = useRouter();
+    const pathname = usePathname();
+    const [searchControl, setSearchControl] = useState(
+      searchParams.search ?? "",
+    );
+    const [locationControl, setLocationControl] = useState(
+      searchParams.where ?? "",
+    );
+    const [dateRangeControl, setDateRangeControl] = useState(
+      getDateRangeFromSearchParams(searchParams),
+    );
+    const setSearchParams = (params: typeof searchParams) => {
+      const queryString = Object.entries(params)
+        .map(([key, value]) =>
+          key && value
+            ? `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+            : "",
+        )
+        .filter(Boolean)
+        .join("&");
+      const query = queryString ? `?${queryString}` : "";
+      router.replace(`${pathname}${query}`);
+    };
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set("search", e.target.value);
-      setSearchParams(newSearchParams);
-      setControl(e.target.value);
+      searchParams.search = e.target.value;
+      setSearchControl(e.target.value);
+      setSearchParams(searchParams);
     };
     const handleLocationChange = (value: string) => {
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set("location", value);
-      setSearchParams(newSearchParams);
-      setControl2(value);
+      searchParams.location = value;
+      setLocationControl(value);
+      setSearchParams(searchParams);
     };
     const handleDateChange = (dateRange: DateRange | undefined) => {
       if (dateRange) {
-        const newSearchParams = new URLSearchParams(searchParams);
         if (dateRange.from) {
-          newSearchParams.set("start", dateRange.from.toISOString());
+          searchParams.start = dateRange.from.toISOString();
         }
         if (dateRange.to) {
-          newSearchParams.set("end", dateRange.to.toISOString());
+          searchParams.end = dateRange.to.toISOString();
         }
-        setSearchParams(newSearchParams);
+        setDateRangeControl(dateRange);
+        setSearchParams(searchParams);
       }
     };
     return (
@@ -71,7 +88,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           type="search"
           ref={ref}
           onChange={handleSearchChange}
-          value={control}
+          value={searchControl}
           placeholder="Search for an ensemble, musician, date or role"
           className="w-full p-2 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
@@ -86,12 +103,15 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
             <Label>Search</Label>
             <Input
               onChange={handleSearchChange}
-              value={control}
+              value={searchControl}
               placeholder="Search for an ensemble, musician, date or role"
               className="mb-2"
             />
             <Label>Location</Label>
-            <Select onValueChange={handleLocationChange} value={control2}>
+            <Select
+              onValueChange={handleLocationChange}
+              value={locationControl}
+            >
               <SelectTrigger className="mb-2">
                 <SelectValue placeholder="Select a hall" />
               </SelectTrigger>
@@ -105,8 +125,8 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
               </SelectContent>
             </Select>
             <Label>Date Range</Label>
-            <DatePickerWithRange
-              date={dateRange}
+            <DateRangePicker
+              dateRange={dateRangeControl}
               handleDateChange={handleDateChange}
               className="mb-2"
             />

@@ -6,7 +6,8 @@ import MyShifts from "~/app/shifts/_components/MyShifts";
 import OpenShifts from "~/app/shifts/_components/OpenShifts";
 import AllShifts from "~/app/shifts/_components/AllShifts";
 import { type Event } from "~/lib/events/utils";
-import SearchBar from "~/components/ui/searchBar";
+import SearchBar from "~/app/shifts/_components/SearchBar";
+import { usePathname, useRouter } from "next/navigation";
 
 type TabContainerProps = {
   events: Event[];
@@ -17,21 +18,26 @@ const TabContainer: React.FC<TabContainerProps> = ({
   events,
   searchParams,
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const tab = searchParams.shifts ?? "myShifts";
-  //   const handleTabChange = (value: string) => {
-  // const newSearchParams = new URLSearchParams(
-  //   Array.from(searchParams),
-  // );
-  // newSearchParams.set("shifts", value);
-  // const query = newSearchParams.toString()
-  //   ? `?${newSearchParams.toString()}`
-  //   : "";
-  // router.push(`${pathname}${query}`);
-  //   };
+  const handleTabChange = (value: string) => {
+    searchParams.shifts = value;
+    const queryString = Object.entries(searchParams)
+      .map(([key, value]) =>
+        key && value
+          ? `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+          : "",
+      )
+      .filter(Boolean)
+      .join("&");
+    const query = queryString ? `?${queryString}` : "";
+    router.replace(`${pathname}${query}`);
+  };
   return (
     <Tabs
       defaultValue={tab}
-      //   onValueChange={() => null}
+      onValueChange={handleTabChange}
       className="space-y-4 pb-2"
     >
       <div className="flex flex-col items-center justify-between gap-6 space-x-2 md:flex-row">
@@ -40,9 +46,7 @@ const TabContainer: React.FC<TabContainerProps> = ({
           <TabsTrigger value="openShifts">Open Shifts</TabsTrigger>
           <TabsTrigger value="allShifts">All Shifts</TabsTrigger>
         </TabsList>
-        {/* <SearchBar
-            searchParams={searchParams}
-          /> */}
+        <SearchBar searchParams={searchParams} />
       </div>
       <MyShifts events={events} />
       <OpenShifts events={events} />
