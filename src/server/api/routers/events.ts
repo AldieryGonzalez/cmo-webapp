@@ -9,14 +9,17 @@ import { createTRPCRouter, protectedGapiProcedure } from "~/server/api/trpc";
 export const eventRouter = createTRPCRouter({
   getEvents: protectedGapiProcedure
     .input(
-      z.object({
-        start: z.date().default(new Date()),
-        end: z.date().optional(),
-      }),
+      z
+        .object({
+          start: z.date(),
+          end: z.date(),
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const start = input.start.toISOString();
-      const end = input.end?.toISOString() ?? undefined;
+      const today = new Date("2023-06-01");
+      const start = input?.start.toISOString() ?? today.toISOString();
+      const end = input?.end.toISOString() ?? undefined;
       const { data } = await ctx.calendar.events.list({
         timeMin: start,
         timeMax: end,
@@ -31,7 +34,17 @@ export const eventRouter = createTRPCRouter({
         });
       }
       const res = gcalEvents.map((event) => {
-        return new CmoEvent(event);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { openShifts, filledShifts, allShifts, ...newEvent } =
+          new CmoEvent(event);
+        const newAllShifts = allShifts.map((shift) => {
+          return {
+            ...shift,
+            isFilled: shift.filledBy !== null,
+          };
+        });
+
+        return { ...newEvent, shifts: newAllShifts };
       });
       return res;
     }),

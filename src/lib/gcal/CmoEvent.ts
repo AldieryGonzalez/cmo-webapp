@@ -2,7 +2,6 @@
 import { type calendar_v3 } from "@googleapis/calendar";
 import { Shift } from "./Shift";
 import { format as dateFormat } from "date-fns";
-import { v4 } from "uuid";
 
 export type MatchMap = {
   filled: RegExpMatchArray[];
@@ -10,6 +9,10 @@ export type MatchMap = {
   extra: string[];
 };
 
+const fullShiftPattern =
+  /^([A-Z][a-z]+ [A-Z]\.)\s\(([^)]+)\):\s((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|[Cc]lose))\s(\([A-Z]+ confirmed \d{1,2}\/\d{1,2}\/\d{2,4}[^)]*\))$/;
+const openShiftPattern =
+  /^open\s\(([^)]+)\):\s((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|[Cc]lose))$/;
 export class CmoEvent {
   title: string;
   location: string;
@@ -23,11 +26,6 @@ export class CmoEvent {
   filledShifts: Shift[];
   start: Date;
   end: Date;
-
-  private fullShiftPattern =
-    /^([A-Z][a-z]+ [A-Z]\.)\s\(([^)]+)\):\s((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|[Cc]lose))\s(\([A-Z]+ confirmed \d{1,2}\/\d{1,2}\/\d{2,4}[^)]*\))$/;
-  private openShiftPattern =
-    /^open\s\(([^)]+)\):\s((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|[Cc]lose))$/;
 
   constructor(event: calendar_v3.Schema$Event) {
     this.title = event.summary!;
@@ -47,8 +45,8 @@ export class CmoEvent {
     const descLines = cleanDescription.split("\n");
 
     for (const line of descLines) {
-      const full = line.match(this.fullShiftPattern);
-      const open = line.match(this.openShiftPattern);
+      const full = line.match(fullShiftPattern);
+      const open = line.match(openShiftPattern);
       if (full) {
         matchMap.filled.push(full);
       } else if (open) {
@@ -58,9 +56,9 @@ export class CmoEvent {
       }
     }
     this.notes = matchMap.extra.join("\n").trim();
-    this.openShifts = matchMap.open.map((shift) => {
+    this.openShifts = matchMap.open.map((shift, index) => {
       return new Shift({
-        id: this.id + "-" + v4(),
+        id: this.id + "-" + index,
         eventId: this.id,
         filledBy: null,
         confirmationNote: "",
@@ -71,9 +69,9 @@ export class CmoEvent {
         end: shift[4]!,
       });
     });
-    this.filledShifts = matchMap.filled.map((shift) => {
+    this.filledShifts = matchMap.filled.map((shift, index) => {
       return new Shift({
-        id: this.id + "-" + v4(),
+        id: this.id + "-" + index,
         eventId: this.id,
         filledBy: shift[1]!,
         role: shift[2]!,
