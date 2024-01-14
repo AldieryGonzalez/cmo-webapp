@@ -37,7 +37,7 @@ const DaySection: React.FC<DaySectionProps> = ({ day, events }) => {
 
 const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
   return (
-    <Card>
+    <Card className="transition-all hover:scale-x-[1.01] hover:scale-y-105 hover:shadow-lg">
       <Link href={`/shifts/${event.id}`} className="block h-full w-full">
         <CardHeader className="space-y-0 px-4 py-2.5">
           <CardTitle className="text-lg">{`${event.title}`}</CardTitle>
