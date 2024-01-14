@@ -17,7 +17,7 @@ export const eventRouter = createTRPCRouter({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const today = new Date("2023-06-01");
+      const today = new Date();
       const start = input?.start.toISOString() ?? today.toISOString();
       const end = input?.end.toISOString() ?? undefined;
       const { data } = await ctx.calendar.events.list({
@@ -48,41 +48,30 @@ export const eventRouter = createTRPCRouter({
       });
       return res;
     }),
-  getApiEvents: protectedGapiProcedure
-    .input(
-      z.object({
-        start: z.date().default(new Date()),
-        end: z.date().optional(),
-      }),
-    )
+  getEvent: protectedGapiProcedure
+    .input(z.string())
     .query(async ({ ctx, input }) => {
-      const start = input.start.toISOString();
-      const end = input.end?.toISOString() ?? undefined;
-      const { data } = await ctx.calendar.events.list({
-        timeMin: start,
-        timeMax: end,
-        orderBy: "startTime",
-        singleEvents: true,
+      const { data: gcalEvent } = await ctx.calendar.events.get({
+        eventId: input,
       });
-      const gcalEvents = data.items;
-      if (!gcalEvents) {
+      if (!gcalEvent) {
         throw new TRPCError({
-          message: "FAILED TO GET GCAL EVENTS",
+          message: "FAILED TO GET GCAL EVENT",
           code: "INTERNAL_SERVER_ERROR",
         });
       }
-      const res = [];
-      for (const event of gcalEvents) {
-        const { ...newEvent } = new CmoEvent(event);
-        const eventShifts = newEvent.allShifts.map((shift) => {
-          return {
-            ...shift,
-            isFilled: shift.filledBy !== null,
-          };
-        });
-        res.push({ event: newEvent, shifts: eventShifts });
-      }
-      return res;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { openShifts, filledShifts, allShifts, ...newEvent } = new CmoEvent(
+        gcalEvent,
+      );
+      const shifts = allShifts.map((shift) => {
+        return {
+          ...shift,
+          isFilled: shift.filledBy !== null,
+        };
+      });
+
+      return { ...newEvent, shifts };
     }),
 });
 export type EventRouter = typeof eventRouter;

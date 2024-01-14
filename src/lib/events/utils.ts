@@ -135,5 +135,5 @@ export function isUnfilled(shift: Shift) {
 export function stringify(shift: Shift) {
   return `${shift.isFilled ? shift.filledBy : "open"} (${
     shift.role
-  }): ${shift.start.toISOString()}-${shift.end.toISOString()}`;
+  }): ${dateFormat(shift.start, "p")}-${dateFormat(shift.end, "p")}`;
 }
