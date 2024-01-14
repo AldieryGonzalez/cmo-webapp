@@ -19,6 +19,7 @@ const Shifts = () => {
   const end = new Date(
     searchParams.get("end") ?? addMonths(start, 1).toISOString(),
   );
+  const tab = searchParams.get("shifts") ?? "myShifts";
   const { data, status } = api.events.getEvents.useQuery();
 
   const handleTabChange = (value: string) => {
@@ -33,12 +34,11 @@ const Shifts = () => {
   };
   if (status === "loading") return <div>Loading...</div>;
   if (status === "error") return <div>Error</div>;
-
   return (
     <div className="flex-1 space-y-4 p-5 pt-6">
       <h1 className="text-3xl font-semibold">Shifts</h1>
       <Tabs
-        defaultValue={"myShifts"}
+        defaultValue={tab}
         onValueChange={handleTabChange}
         className="space-y-4 pb-2"
       >
