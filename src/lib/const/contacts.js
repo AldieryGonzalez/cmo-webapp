@@ -390,3 +390,8 @@ export const contacts = [
     emailAddress: "henry.stewart@northwestern.edu",
   },
 ];
+
+export const alternateNames = {
+  aldiery: "Aldi",
+  sheyla: "Shayla",
+};

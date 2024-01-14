@@ -1,5 +1,6 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { alternateNames, contacts } from "../const/contacts";
 
 export type AuthSession = {
   session: {
@@ -26,7 +27,38 @@ export const getUserAuth = async () => {
   }
 };
 
+export const getUser = async () => {
+  const user = await currentUser();
+  if (!user) return null;
+  const contact = nameToContact(user.firstName + " " + user.lastName);
+  return {
+    ...user,
+    contact,
+  };
+};
+
 export const checkAuth = async () => {
   const { userId } = auth();
   if (!userId) redirect("/sign-in");
 };
+
+export function nameToContact(name: string | null) {
+  if (!name) return null;
+  const names: Record<string, string> = alternateNames;
+  try {
+    const firstName = name.split(" ")[0]?.toLowerCase();
+    const lastInitial = name.split(" ")[1]?.[0];
+    if (!firstName || !lastInitial) return null;
+    const contact = contacts.find((contact) => {
+      return (
+        (contact.firstName.toLowerCase() === firstName ||
+          contact.firstName.toLowerCase() === names[firstName]) &&
+        contact.lastName.startsWith(lastInitial)
+      );
+    });
+    if (!contact) return null;
+    return contact;
+  } catch (e) {
+    return null;
+  }
+}

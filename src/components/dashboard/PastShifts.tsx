@@ -1,3 +1,4 @@
+import { getUser } from "~/lib/auth/utils";
 import DashboardShiftCard from "./DashboardShiftCard";
 import { inEvent, type Event } from "~/lib/events/utils";
 
@@ -5,7 +6,11 @@ type Props = {
   events: Event[];
 };
 
-const PastShifts = ({ events }: Props) => {
+const PastShifts = async ({ events }: Props) => {
+  const res = await getUser();
+  if (!res) return null;
+  const { contact, ...user } = res;
+
   const upcomingShifts = events.filter((event) => {
     return inEvent(event, "Aldi G.");
     // return event.start.isBefore(momen);
