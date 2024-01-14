@@ -43,6 +43,7 @@ export class CmoEvent {
       .replaceAll("</span>", "")
       .replaceAll("<br>", "\n");
     const descLines = cleanDescription.split("\n");
+    const roleCount: Record<string, number> = {};
 
     for (const line of descLines) {
       const full = line.match(fullShiftPattern);
@@ -56,9 +57,10 @@ export class CmoEvent {
       }
     }
     this.notes = matchMap.extra.join("\n").trim();
-    this.openShifts = matchMap.open.map((shift, index) => {
+    this.openShifts = matchMap.open.map((shift) => {
+      roleCount[shift[1]!] = (roleCount[shift[1]!] ?? 0) + 1;
       return new Shift({
-        id: this.id + "-" + index,
+        id: this.id + "-" + shift[1] + roleCount[shift[1]!],
         eventId: this.id,
         filledBy: null,
         confirmationNote: "",
@@ -69,9 +71,10 @@ export class CmoEvent {
         end: shift[4]!,
       });
     });
-    this.filledShifts = matchMap.filled.map((shift, index) => {
+    this.filledShifts = matchMap.filled.map((shift) => {
+      roleCount[shift[2]!] = (roleCount[shift[2]!] ?? 0) + 1;
       return new Shift({
-        id: this.id + "-" + index,
+        id: this.id + "-" + shift[2] + roleCount[shift[2]!],
         eventId: this.id,
         filledBy: shift[1]!,
         role: shift[2]!,
@@ -100,107 +103,19 @@ export class CmoEvent {
       let roleBIndex = roleHierarchy.indexOf(b.role);
 
       // If role is not found in the hierarchy, assign a high index
-      if (roleAIndex === -1) roleAIndex = roleHierarchy.length;
-      if (roleBIndex === -1) roleBIndex = roleHierarchy.length;
+      if (roleAIndex === -1) {
+        const checkIndex =
+          roleHierarchy.findIndex((role) => role.includes(a.role)) + 1;
+        roleAIndex = checkIndex <= 0 ? roleHierarchy.length : checkIndex;
+      }
+      if (roleBIndex === -1) {
+        const checkIndex =
+          roleHierarchy.findIndex((role) => role.includes(b.role)) + 1;
+        roleBIndex = checkIndex <= 0 ? roleHierarchy.length : checkIndex;
+      }
 
       return roleAIndex - roleBIndex;
     });
-  }
-
-  inEvent(employeeName: string) {
-    for (const shift of this.filledShifts) {
-      if (shift.filledBy == employeeName) return true;
-    }
-    return false;
-  }
-
-  roleInEvent(employeeName: string) {
-    for (const shift of this.filledShifts) {
-      if (shift.filledBy == employeeName) return shift.role;
-    }
-    return false;
-  }
-
-  isSearched(searchParam: URLSearchParams, employeeName = "") {
-    return (
-      this.hasSearchTerm(searchParam.get("search"), employeeName) &&
-      this.hasLocationSearchTerm(searchParam.get("location"))
-    );
-  }
-
-  hasSearchTerm(searchTerm: string | null, employeeName = "") {
-    if (searchTerm == null) return true;
-    const role = this.roleInEvent(employeeName);
-    if (this.title?.toLowerCase().includes(searchTerm.toLowerCase()))
-      return true;
-    if (this.location?.toLowerCase().includes(searchTerm.toLowerCase()))
-      return true;
-    if (this.notes?.toLowerCase().includes(searchTerm.toLowerCase()))
-      return true;
-    if (role !== false && role.toLowerCase().includes(searchTerm.toLowerCase()))
-      return true;
-    else if (this.hasOpenRoleSearchTerm(searchTerm)) return true;
-    return false;
-  }
-  hasLocationSearchTerm(searchTerm: string | null) {
-    if (this.location == null) return false;
-    if (searchTerm == null) return true;
-
-    const searchTermsMap: Record<string, string[]> = {
-      "pick-staiger": ["pick-staiger", "pick", "pick staiger"],
-      galvin: ["galvin"],
-      mcclintock: ["mcclintock"],
-      mcr: ["mcr", "master class room"],
-      rot: ["rot", "ryan opera theatre", "ryan opera theater"],
-    };
-    const searchTerms = searchTermsMap[searchTerm] ?? [searchTerm];
-
-    for (const term of searchTerms) {
-      const lowerCaseTerm = term.toLowerCase();
-      if (this.location.toLowerCase().includes(lowerCaseTerm)) return true;
-    }
-    return false;
-  }
-
-  hasOpenRoleSearchTerm(searchTerm: string) {
-    for (const shift of this.openShifts) {
-      if (shift.role.toLowerCase().includes(searchTerm.toLowerCase()))
-        return true;
-    }
-    return false;
-  }
-  get allShiftsStringArray() {
-    return this.allShifts.map((shift) => shift.stringify);
-  }
-
-  get hasFilledShifts() {
-    return this.filledShifts.length > 0;
-  }
-
-  get hasOpenShifts() {
-    return this.openShifts.length > 0 && !this.title.startsWith("[Canceled]");
-  }
-
-  get hasPast() {
-    return this.end < new Date();
-  }
-
-  get longDateString() {
-    return dateFormat(this.start, "PPPP");
-  }
-  get startTimeString() {
-    return dateFormat(this.start, "p");
-  }
-  get endTimeString() {
-    return dateFormat(this.end, "p");
-  }
-  get timeRangeString() {
-    return `${this.startTimeString} - ${this.endTimeString}`;
-  }
-  get longTimeRangeString() {
-    return `${dateFormat(this.start, "EEEE MMMM dd, h:mm a")} - ${
-      this.endTimeString
-    }`;
   }
 }
 

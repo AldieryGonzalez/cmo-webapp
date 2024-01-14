@@ -36,6 +36,7 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
       })}
     >
       {stringify(shift)}
+      {shift.id}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="absolute bottom-0 right-0 top-0 rounded-e-full bg-purple-800 px-2">

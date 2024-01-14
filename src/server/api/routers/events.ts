@@ -3,8 +3,11 @@ import { TRPCError, type inferRouterOutputs } from "@trpc/server";
 import { z } from "zod";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
 
-import { createTRPCRouter, protectedGapiProcedure } from "~/server/api/trpc";
-// import { events, shifts } from "~/server/db/schema";
+import {
+  createTRPCRouter,
+  protectedGapiProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
 
 export const eventRouter = createTRPCRouter({
   getEvents: protectedGapiProcedure
@@ -73,21 +76,16 @@ export const eventRouter = createTRPCRouter({
 
       return { ...newEvent, shifts };
     }),
+  // saveShift: protectedProcedure.input(z.object({isFilled: z.boolean(),
+  //   id: z.string(),
+  //   eventId: z.string(),
+  //   filledBy: z.string().optional(),
+  //   user: z.string().optional(),
+  //   role: z.string(),
+  //   start: z.date(),
+  //   end: z.date(),
+  //   confirmationNote: z.string()})).mutation(async ({ ctx, input }) => {
+  //   const res = await ctx.db.insert()
 });
 export type EventRouter = typeof eventRouter;
 export type EventsOutput = inferRouterOutputs<EventRouter>;
-// const location =
-//   event.location ??
-//   ("Other" as unknown as typeof events.location.dataType);
-// await ctx.db.insert(events).values({
-//   id: newEvent.id,
-//   createdByEmail: newEvent.creator,
-//   location: newEvent.location,
-//   title: newEvent.title,
-//   start: newEvent.start,
-//   end: newEvent.end,
-//   createdAt: newEvent.created,
-//   updatedAt: newEvent.updated,
-//   notes: event.description,
-// });
-// await ctx.db.insert(shifts).values(eventShifts)
