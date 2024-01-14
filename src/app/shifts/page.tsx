@@ -8,6 +8,8 @@ import MyShifts from "./_components/MyShifts";
 // import AllShifts from "./_components/AllShifts";
 import { api } from "~/trpc/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import OpenShifts from "./_components/OpenShifts";
+import AllShifts from "./_components/AllShifts";
 
 const Shifts = () => {
   const router = useRouter();
@@ -52,8 +54,8 @@ const Shifts = () => {
           /> */}
         </div>
         <MyShifts events={data} searchParams={searchParams} />
-        {/* <OpenShifts events={events} searchParams={searchParams} />
-        <AllShifts events={events} searchParams={searchParams} /> */}
+        <OpenShifts events={data} searchParams={searchParams} />
+        <AllShifts events={data} searchParams={searchParams} />
       </Tabs>
     </div>
   );

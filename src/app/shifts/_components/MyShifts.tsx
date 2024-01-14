@@ -69,21 +69,17 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
 
 const MyShifts: React.FC<OverviewProps> = ({ searchParams, events }) => {
   const dateRange = getDateRangeFromSearchParams(searchParams);
-  console.log("dateRange: ", dateRange);
   const inRangeEvents = getEventsBetween(
     events,
     dateRange?.from,
     dateRange?.to,
   );
-  console.log("inRangeEvents: ", inRangeEvents);
   const searchedEvents = inRangeEvents.filter((event) => {
     return isSearched(event, searchParams, "Aldi G.");
   });
-  console.log("searchedEvents: ", searchedEvents);
   const myEvents = groupEventsByDay(
     searchedEvents.filter((event) => inEvent(event, "Aldi G.")),
   );
-  console.log("myEvents: ", myEvents);
   return (
     <TabsContent value="myShifts" className="space-y-4">
       <div className="mx-2 mb-5 flex flex-col gap-2 ">

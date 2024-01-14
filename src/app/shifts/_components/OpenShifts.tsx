@@ -3,15 +3,18 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "~/components/ui/card";
 import { TabsContent } from "@radix-ui/react-tabs";
 import {
   getDateRangeFromSearchParams,
   getEventsBetween,
   groupEventsByDay,
-} from "@/utilities/dateUtils";
-import { CmoEvent } from "@/utilities/classes/CmoEvent";
-import { Link } from "react-router-dom";
+} from "~/lib/gcal/utils";
+import Link from "next/link";
+import { type EventsOutput } from "~/server/api/routers/events";
+import { hasOpenShifts, isSearched, timeRangeString } from "~/lib/events/utils";
+
+type CmoEvent = EventsOutput["getEvents"][0];
 
 type OverviewProps = {
   searchParams: URLSearchParams;
@@ -41,13 +44,13 @@ const DaySection: React.FC<DaySectionProps> = ({ day, events }) => {
 const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
   return (
     <Card>
-      <Link to={`/shifts/${event.id}`} className="block h-full w-full">
+      <Link href={`/shifts/${event.id}`} className="block h-full w-full">
         <CardHeader className="space-y-0 px-4 py-2.5">
           <CardTitle className="text-lg">{`${event.title}`}</CardTitle>
           <CardDescription>
-            {`${event.location !== undefined ? `${event.location} - ` : ""}${
-              event.timeRangeString
-            }`}
+            {`${
+              event.location !== undefined ? `${event.location} - ` : ""
+            }${timeRangeString(event)}`}
           </CardDescription>
         </CardHeader>
       </Link>
@@ -63,12 +66,11 @@ const OpenShifts: React.FC<OverviewProps> = ({ searchParams, events }) => {
     dateRange?.to,
   );
   const searchedEvents = inRangeEvents.filter((event) => {
-    return event.isSearched(searchParams);
+    return isSearched(event, searchParams);
   });
   const myEvents = groupEventsByDay(
-    searchedEvents.filter((event) => event.hasOpenShifts),
+    searchedEvents.filter((event) => hasOpenShifts(event)),
   );
-
   return (
     <TabsContent value="openShifts" className="space-y-4">
       <div className="mx-2 mb-5 flex flex-col gap-2 ">

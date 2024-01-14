@@ -12,6 +12,7 @@ import {
 } from "~/lib/gcal/utils";
 import Link from "next/link";
 import type { EventsOutput } from "~/server/api/routers/events";
+import { isSearched, timeRangeString } from "~/lib/events/utils";
 
 type CmoEvent = EventsOutput["getEvents"][0];
 type OverviewProps = {
@@ -46,9 +47,9 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
         <CardHeader className="space-y-0 px-4 py-2.5">
           <CardTitle className="text-lg">{`${event.title}`}</CardTitle>
           <CardDescription>
-            {`${event.location !== undefined ? `${event.location} - ` : ""}${
-              event.timeRangeString
-            }`}
+            {`${
+              event.location !== undefined ? `${event.location} - ` : ""
+            }${timeRangeString(event)}`}
           </CardDescription>
         </CardHeader>
       </Link>
@@ -64,7 +65,7 @@ const AllShifts: React.FC<OverviewProps> = ({ searchParams, events }) => {
     dateRange?.to,
   );
   const searchedEvents = inRangeEvents.filter((event) => {
-    return event.isSearched(searchParams);
+    return isSearched(event, searchParams);
   });
   const myEvents = groupEventsByDay(searchedEvents);
 
