@@ -1,3 +1,4 @@
+import { inEvent } from "~/lib/events/utils";
 import DashboardShiftCard from "./DashboardShiftCard";
 import { type EventsOutput } from "~/server/api/routers/events";
 
@@ -7,7 +8,7 @@ type Props = {
 
 const UpcomingShifts = ({ events }: Props) => {
   const upcomingShifts = events.filter((event) => {
-    return event.inEvent("Aldi G.");
+    return inEvent(event, "Aldi G.");
   });
   if (upcomingShifts.length === 0) {
     return <h3>No upcoming shifts</h3>;

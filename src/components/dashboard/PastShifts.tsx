@@ -1,13 +1,13 @@
-import type { CmoEvent } from "~/lib/gcal/CmoEvent";
 import DashboardShiftCard from "./DashboardShiftCard";
+import { inEvent, type Event } from "~/lib/events/utils";
 
 type Props = {
-  events: CmoEvent[];
+  events: Event[];
 };
 
 const PastShifts = ({ events }: Props) => {
   const upcomingShifts = events.filter((event) => {
-    return event.inEvent("Aldi G.");
+    return inEvent(event, "Aldi G.");
     // return event.start.isBefore(momen);
   });
   return (
