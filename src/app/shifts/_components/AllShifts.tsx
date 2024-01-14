@@ -5,18 +5,13 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { TabsContent } from "@radix-ui/react-tabs";
-import {
-  getDateRangeFromSearchParams,
-  getEventsBetween,
-  groupEventsByDay,
-} from "~/lib/gcal/utils";
+import { groupEventsByDay } from "~/lib/gcal/utils";
 import Link from "next/link";
 import type { EventsOutput } from "~/server/api/routers/events";
-import { isSearched, timeRangeString } from "~/lib/events/utils";
+import { timeRangeString } from "~/lib/events/utils";
 
 type CmoEvent = EventsOutput["getEvents"][0];
 type OverviewProps = {
-  searchParams: URLSearchParams;
   events: CmoEvent[];
 };
 
@@ -57,17 +52,8 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
   );
 };
 
-const AllShifts: React.FC<OverviewProps> = ({ searchParams, events }) => {
-  const dateRange = getDateRangeFromSearchParams(searchParams);
-  const inRangeEvents = getEventsBetween(
-    events,
-    dateRange?.from,
-    dateRange?.to,
-  );
-  const searchedEvents = inRangeEvents.filter((event) => {
-    return isSearched(event, searchParams);
-  });
-  const myEvents = groupEventsByDay(searchedEvents);
+const AllShifts: React.FC<OverviewProps> = ({ events }) => {
+  const myEvents = groupEventsByDay(events);
 
   return (
     <TabsContent value="allShifts" className="space-y-4">

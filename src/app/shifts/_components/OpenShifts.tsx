@@ -5,19 +5,14 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { TabsContent } from "@radix-ui/react-tabs";
-import {
-  getDateRangeFromSearchParams,
-  getEventsBetween,
-  groupEventsByDay,
-} from "~/lib/gcal/utils";
+import { groupEventsByDay } from "~/lib/gcal/utils";
 import Link from "next/link";
 import { type EventsOutput } from "~/server/api/routers/events";
-import { hasOpenShifts, isSearched, timeRangeString } from "~/lib/events/utils";
+import { hasOpenShifts, timeRangeString } from "~/lib/events/utils";
 
 type CmoEvent = EventsOutput["getEvents"][0];
 
 type OverviewProps = {
-  searchParams: URLSearchParams;
   events: CmoEvent[];
 };
 
@@ -58,24 +53,15 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
   );
 };
 
-const OpenShifts: React.FC<OverviewProps> = ({ searchParams, events }) => {
-  const dateRange = getDateRangeFromSearchParams(searchParams);
-  const inRangeEvents = getEventsBetween(
-    events,
-    dateRange?.from,
-    dateRange?.to,
-  );
-  const searchedEvents = inRangeEvents.filter((event) => {
-    return isSearched(event, searchParams);
-  });
-  const myEvents = groupEventsByDay(
-    searchedEvents.filter((event) => hasOpenShifts(event)),
+const OpenShifts: React.FC<OverviewProps> = ({ events }) => {
+  const openEvents = groupEventsByDay(
+    events.filter((event) => hasOpenShifts(event)),
   );
   return (
     <TabsContent value="openShifts" className="space-y-4">
       <div className="mx-2 mb-5 flex flex-col gap-2 ">
         <h3 className="text-3xl font-bold">Open Shifts</h3>
-        {myEvents.map((day) => {
+        {openEvents.map((day) => {
           return <DaySection key={day.day} day={day.day} events={day.events} />;
         })}
       </div>

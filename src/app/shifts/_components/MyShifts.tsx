@@ -5,24 +5,14 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { TabsContent } from "~/components/ui/tabs";
-import {
-  getDateRangeFromSearchParams,
-  getEventsBetween,
-  groupEventsByDay,
-} from "~/lib/gcal/utils";
+import { groupEventsByDay } from "~/lib/gcal/utils";
 
 import Link from "next/link";
 import type { EventsOutput } from "~/server/api/routers/events";
-import {
-  inEvent,
-  isSearched,
-  roleInEvent,
-  timeRangeString,
-} from "~/lib/events/utils";
+import { inEvent, roleInEvent, timeRangeString } from "~/lib/events/utils";
 
 type CmoEvent = EventsOutput["getEvents"][0];
 type OverviewProps = {
-  searchParams: URLSearchParams;
   events: CmoEvent[];
 };
 
@@ -67,18 +57,9 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
   );
 };
 
-const MyShifts: React.FC<OverviewProps> = ({ searchParams, events }) => {
-  const dateRange = getDateRangeFromSearchParams(searchParams);
-  const inRangeEvents = getEventsBetween(
-    events,
-    dateRange?.from,
-    dateRange?.to,
-  );
-  const searchedEvents = inRangeEvents.filter((event) => {
-    return isSearched(event, searchParams, "Aldi G.");
-  });
+const MyShifts: React.FC<OverviewProps> = ({ events }) => {
   const myEvents = groupEventsByDay(
-    searchedEvents.filter((event) => inEvent(event, "Aldi G.")),
+    events.filter((event) => inEvent(event, "Aldi G.")),
   );
   return (
     <TabsContent value="myShifts" className="space-y-4">

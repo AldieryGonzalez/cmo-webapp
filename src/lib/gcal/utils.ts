@@ -5,6 +5,7 @@ import { longDateString } from "../events/utils";
 
 type CmoEvent = EventsOutput["getEvents"][0];
 type EventByDayObj = Record<string, CmoEvent[]>;
+type NextUrlSearchParams = Record<string, string | undefined>;
 
 const isBetween = (eventDate: Date, start: Date, end: Date) => {
   start = startOfDay(start);
@@ -20,14 +21,12 @@ export const getEventsBetween = (
   return events.filter((event) => isBetween(event.start, start, end));
 };
 
-export const getDateRangeFromSearchParams = (searchParams: URLSearchParams) => {
+export const getDateRangeFromSearchParams = (
+  searchParams: NextUrlSearchParams,
+) => {
   return {
-    from: searchParams.get("start")
-      ? new Date(searchParams.get("start")!)
-      : undefined,
-    to: searchParams.get("end")
-      ? new Date(searchParams.get("end")!)
-      : undefined,
+    from: searchParams.start ? new Date(searchParams.start!) : undefined,
+    to: searchParams.end ? new Date(searchParams.end!) : undefined,
   } as DateRange | undefined;
 };
 

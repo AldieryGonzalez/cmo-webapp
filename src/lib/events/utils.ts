@@ -2,6 +2,7 @@ import type { EventsOutput } from "~/server/api/routers/events";
 import { format as dateFormat } from "date-fns";
 
 export type Event = EventsOutput["getEvents"][0];
+type NextUrlSearchParams = Record<string, string | undefined>;
 
 export function getOpenShifts(event: Event) {
   return event.shifts.filter((shift) => !shift.isFilled);
@@ -26,12 +27,12 @@ export function roleInEvent(event: Event, employeeName: string) {
 
 export function isSearched(
   event: Event,
-  searchParam: URLSearchParams,
+  searchParam: NextUrlSearchParams,
   employeeName = "",
 ) {
   return (
-    hasSearchTerm(event, searchParam.get("search"), employeeName) &&
-    hasLocationSearchTerm(event, searchParam.get("location"))
+    hasSearchTerm(event, searchParam.search ?? null, employeeName) &&
+    hasLocationSearchTerm(event, searchParam.location ?? null)
   );
 }
 
