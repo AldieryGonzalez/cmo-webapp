@@ -1,13 +1,16 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
+  boolean,
   mysqlTableCreator,
+  serial,
   text,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
+import { v4 as uuid } from "uuid";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -23,29 +26,26 @@ export const events = mysqlTable("event", {
   createdByEmail: varchar("createdByEmail", { length: 255 }).notNull(),
   location: varchar("location", { length: 256 }).notNull(),
   notes: text("notes"),
-  createdAt: timestamp("created_at")
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: timestamp("updatedAt").onUpdateNow(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+  syncedAt: timestamp("syncedAt").onUpdateNow().notNull(),
   start: timestamp("start").notNull(),
   end: timestamp("end").notNull(),
+  cancelled: boolean("cancelled").notNull().default(false),
 });
 
-export const eventsRelations = relations(events, ({ one, many }) => ({
-  creator: one(users, {
-    fields: [events.createdByEmail],
-    references: [users.email],
-  }),
+export const eventsRelations = relations(events, ({ many }) => ({
   shifts: many(shifts),
 }));
 
 export const shifts = mysqlTable("shift", {
-  id: varchar("id", { length: 255 }).primaryKey(),
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(uuid),
   eventId: varchar("eventId", { length: 255 }).notNull(),
-  userEmail: varchar("userEmail", { length: 255 }),
   role: varchar("role", { length: 255 }).notNull(),
   start: timestamp("start").notNull(),
   end: timestamp("end").notNull(),
+  userEmail: varchar("userEmail", { length: 255 }),
+  filledBy: varchar("filledBy", { length: 255 }),
   confirmationNote: text("confirmationNote"),
 });
 
@@ -66,3 +66,9 @@ export const users = mysqlTable("user", {
 export const usersRelations = relations(users, ({ many }) => ({
   shifts: many(shifts),
 }));
+
+export const syncs = mysqlTable("syncs", {
+  id: serial("id"),
+  userEmail: varchar("userEmail", { length: 255 }).notNull(),
+  lastSynced: timestamp("lastSynced").notNull(),
+});

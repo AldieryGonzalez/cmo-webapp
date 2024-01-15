@@ -19,8 +19,11 @@ const SyncPage: React.FC = () => {
     to: addDays(new Date(), 30),
   });
 
-  const { data, error, isLoading, refetch } = api.events.getApiEvents.useQuery(
-    { start: dateRange?.from, end: dateRange?.to },
+  const baseDate = new Date("2023-09-01");
+  const today = new Date();
+
+  const { data, error, isLoading, refetch } = api.events.getEvents.useQuery(
+    { start: dateRange?.from ?? baseDate, end: dateRange?.to ?? today },
     { enabled: false },
   );
 
@@ -44,7 +47,6 @@ const SyncPage: React.FC = () => {
         <DateRangePicker
           dateRange={dateRange}
           handleDateChange={(range) => setDateRange(range)}
-          pastDatesDisabled
         />
       </div>
       <div className="flex justify-center">{renderSwitch()}</div>
@@ -53,31 +55,32 @@ const SyncPage: React.FC = () => {
 };
 
 type EventSyncContentProps = {
-  events: EventsOutput["getApiEvents"];
+  events: EventsOutput["getEvents"];
 };
 
 const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
   return (
     <div>
+      console.log(events);
       {events.map((event) => {
         return (
           <div
-            key={event.event.id}
+            key={event.id}
             className="m-1 justify-center rounded-md border-2 border-purple-900/15 p-3 shadow-md"
           >
             <h3 className="text-xl font-bold">{`${
-              event.event.title
-            } - ${event.event.start.toDateString()}`}</h3>
+              event.title
+            } - ${event.start.toDateString()}`}</h3>
             <p className="text-lg font-semibold italic">
-              {event.event.location} {event.event.start.toLocaleString()}
+              {event.location} {event.start.toLocaleString()}
               {" - "}
-              {event.event.end.toLocaleString()}
+              {event.end.toLocaleString()}
             </p>
 
-            <p>{event.event.notes}</p>
+            <p>{event.notes}</p>
             <p className="text-sm font-semibold">
               Created by:
-              {event.event.creator}
+              {event.creator}
             </p>
             <Collapsible>
               <CollapsibleTrigger>
@@ -96,10 +99,10 @@ const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
             <div>
               <p className="text-right text-xs">
                 {"created: "}
-                {event.event.updated.toLocaleString()} - {"updated: "}
-                {event.event.created.toLocaleString()}
+                {event.updated.toLocaleString()} - {"updated: "}
+                {event.created.toLocaleString()}
               </p>
-              <p className="text-right text-xs">{event.event.id}</p>
+              <p className="text-right text-xs">{event.id}</p>
             </div>
           </div>
         );
@@ -109,7 +112,7 @@ const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
 };
 
 type ShiftCardProps = {
-  shift: EventsOutput["getApiEvents"][0]["shifts"][0];
+  shift: EventsOutput["getEvents"][0]["shifts"][0];
 };
 
 const ShiftCard: React.FC<ShiftCardProps> = ({ shift }) => {

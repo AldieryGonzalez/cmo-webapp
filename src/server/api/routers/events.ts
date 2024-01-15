@@ -2,12 +2,14 @@
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
 import { z } from "zod";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
+import type { Event } from "~/lib/events/utils";
 
 import {
   createTRPCRouter,
   protectedGapiProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { events } from "~/server/db/schema";
 
 export const eventRouter = createTRPCRouter({
   getEvents: protectedGapiProcedure
@@ -76,6 +78,36 @@ export const eventRouter = createTRPCRouter({
 
       return { ...newEvent, shifts };
     }),
+  syncEvent: protectedProcedure
+    .input(
+      z.object({
+        title: z.string(),
+        location: z.string(),
+        id: z.string(),
+        creator: z.string(),
+        updated: z.date(),
+        created: z.date(),
+        start: z.date(),
+        end: z.date(),
+        notes: z.string(),
+        shifts: z.array(
+          z.object({
+            isFilled: z.boolean(),
+            id: z.string(),
+            eventId: z.string(),
+            filledBy: z.string().optional(),
+            user: z.string().optional(),
+            role: z.string(),
+            start: z.date(),
+            end: z.date(),
+            confirmationNote: z.string(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.transaction(async (trx) => {});
+    }),
   // saveShift: protectedProcedure.input(z.object({isFilled: z.boolean(),
   //   id: z.string(),
   //   eventId: z.string(),
@@ -89,3 +121,5 @@ export const eventRouter = createTRPCRouter({
 });
 export type EventRouter = typeof eventRouter;
 export type EventsOutput = inferRouterOutputs<EventRouter>;
+export type Event = EventsOutput["getEvent"];
+export type Shift = EventsOutput["getEvent"]["shifts"][0];
