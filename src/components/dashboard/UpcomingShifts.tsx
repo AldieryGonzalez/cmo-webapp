@@ -14,7 +14,7 @@ const UpcomingShifts = ({ events }: Props) => {
     return <h3>No upcoming shifts</h3>;
   }
   return (
-    <div className="flex snap-x snap-mandatory scroll-p-4 gap-5 overflow-y-visible overflow-x-scroll pb-2">
+    <div className="flex snap-x snap-mandatory scroll-p-4 gap-5 overflow-x-auto pb-2">
       {upcomingShifts.map((event) => {
         return <DashboardShiftCard key={event.id} event={event} />;
       })}

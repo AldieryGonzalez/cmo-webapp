@@ -18,7 +18,7 @@ const PastShifts = async ({ events }: Props) => {
   return (
     <div className="hidden md:flex md:flex-col">
       <h3 className="block text-xl font-normal">Past Shifts</h3>
-      <div className="flex snap-y snap-mandatory scroll-p-0.5 flex-col gap-1  overflow-x-hidden overflow-y-scroll px-2 pb-2">
+      <div className="flex snap-y snap-mandatory scroll-p-0.5 flex-col gap-1 overflow-y-auto px-2 pb-2">
         {upcomingShifts.map((event) => {
           return <DashboardShiftCard key={event.id} event={event} />;
         })}
