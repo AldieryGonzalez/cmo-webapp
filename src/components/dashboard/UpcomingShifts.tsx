@@ -14,8 +14,8 @@ const UpcomingShifts = ({ events }: Props) => {
   });
   if (upcomingShifts.length === 0) {
     return (
-      <div className="w-full rounded-lg bg-white p-4 shadow">
-        <h3 className="text-lg">
+      <div className="mt-4 w-full rounded-lg bg-white p-4 shadow">
+        <h3 className="text-base">
           No upcoming shifts, go to{" "}
           <Link
             href={"/shifts?shifts=allShifts"}
