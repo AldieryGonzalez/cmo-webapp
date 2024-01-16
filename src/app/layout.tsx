@@ -36,12 +36,11 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ClerkProvider>
-              <div>
+              <div className="grid h-screen grid-rows-[min-content_92%]">
                 <Navbar />
-                <main className="mx-auto mt-4 px-4 md:p-0">{children}</main>
+                <main className="mt-4 px-4 md:p-0">{children}</main>
               </div>
             </ClerkProvider>
-
             <Toaster />
           </ThemeProvider>
         </TRPCReactProvider>
