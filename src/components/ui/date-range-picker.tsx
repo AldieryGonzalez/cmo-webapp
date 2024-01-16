@@ -16,12 +16,16 @@ type Props = React.HTMLAttributes<HTMLDivElement> & {
   dateRange: DateRange | undefined;
   handleDateChange: SelectRangeEventHandler;
   pastDatesDisabled?: boolean;
+  withIcon?: boolean;
+  variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "card";
 };
 export function DateRangePicker({
   className,
   dateRange,
   handleDateChange,
   pastDatesDisabled = false,
+  withIcon = true,
+  variant = "outline",
 }: Props) {
   return (
     <div className={cn("grid gap-2", className)}>
@@ -29,13 +33,13 @@ export function DateRangePicker({
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"outline"}
+            variant={variant}
             className={cn(
               "w-full justify-start text-left font-normal",
               !dateRange && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            {withIcon && <CalendarIcon className="mr-2 h-4 w-4" />}
             {dateRange?.from ? (
               dateRange.to ? (
                 <>
