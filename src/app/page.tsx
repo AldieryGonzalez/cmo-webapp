@@ -7,7 +7,7 @@ import UpcomingShifts from "~/components/dashboard/UpcomingShifts";
 export default async function Home() {
   const events = await api.events.getEvents.query({
     start: subDays(new Date(), 60),
-    end: addDays(new Date(), 30),
+    end: addDays(new Date(), 60),
   });
 
   if (events)
@@ -16,10 +16,8 @@ export default async function Home() {
         <div className="">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         </div>
-        <div className="w-full">
-          <h3 className="text-xl font-normal">Upcoming Shifts</h3>
-          <UpcomingShifts events={events} />
-        </div>
+
+        <UpcomingShifts events={events} />
         <div className="flex gap-4 overflow-auto p-2">
           <DashboardMessages />
           <PastShifts events={events} />
