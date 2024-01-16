@@ -11,6 +11,30 @@ import {
 } from "~/server/api/trpc";
 import { events, shifts } from "~/server/db/schema";
 
+const InputShift = z.object({
+  isFilled: z.boolean(),
+  id: z.string(),
+  eventId: z.string(),
+  filledBy: z.string().optional(),
+  user: z.string().optional(),
+  role: z.string(),
+  start: z.date(),
+  end: z.date(),
+  confirmationNote: z.string().optional(),
+});
+const InputEvent = z.object({
+  title: z.string(),
+  location: z.string(),
+  id: z.string(),
+  creator: z.string(),
+  updated: z.date(),
+  created: z.date(),
+  start: z.date(),
+  end: z.date(),
+  notes: z.string(),
+  shifts: z.array(InputShift),
+});
+
 export const eventRouter = createTRPCRouter({
   getEvents: protectedGapiProcedure
     .input(
@@ -79,32 +103,7 @@ export const eventRouter = createTRPCRouter({
       return { ...newEvent, shifts };
     }),
   syncEvent: protectedProcedure
-    .input(
-      z.object({
-        title: z.string(),
-        location: z.string(),
-        id: z.string(),
-        creator: z.string(),
-        updated: z.date(),
-        created: z.date(),
-        start: z.date(),
-        end: z.date(),
-        notes: z.string(),
-        shifts: z.array(
-          z.object({
-            isFilled: z.boolean(),
-            id: z.string(),
-            eventId: z.string(),
-            filledBy: z.string().optional(),
-            user: z.string().optional(),
-            role: z.string(),
-            start: z.date(),
-            end: z.date(),
-            confirmationNote: z.string().optional(),
-          }),
-        ),
-      }),
-    )
+    .input(InputEvent)
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (trx) => {
         // Sync the event itself
