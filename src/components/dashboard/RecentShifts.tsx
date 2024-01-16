@@ -2,7 +2,6 @@ import { getUser } from "~/lib/auth/utils";
 import DashboardShiftCard from "./DashboardShiftCard";
 import { inEvent, type Event } from "~/lib/events/utils";
 import { isAfter } from "date-fns";
-import Link from "next/link";
 
 type Props = {
   events: Event[];
