@@ -56,8 +56,8 @@ export const shiftsRelations = relations(shifts, ({ one }) => ({
 
 export const users = mysqlTable("user", {
   email: varchar("email", { length: 255 }).notNull().primaryKey(),
-  firstName: varchar("name", { length: 255 }),
-  lastName: varchar("lastName", { length: 255 }),
+  firstName: varchar("name", { length: 255 }).notNull(),
+  lastName: varchar("lastName", { length: 255 }).notNull(),
   phoneNumber: varchar("phoneNumber", { length: 255 }),
   image: varchar("image", { length: 255 }),
   alternativeNames: varchar("alternativeNames", { length: 255 }),

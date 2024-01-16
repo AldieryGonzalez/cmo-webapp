@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
-import type { Event } from "~/lib/events/utils";
 
 import {
   createTRPCRouter,
   protectedGapiProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { events } from "~/server/db/schema";
+import { events, shifts } from "~/server/db/schema";
 
 export const eventRouter = createTRPCRouter({
   getEvents: protectedGapiProcedure
@@ -100,13 +100,67 @@ export const eventRouter = createTRPCRouter({
             role: z.string(),
             start: z.date(),
             end: z.date(),
-            confirmationNote: z.string(),
+            confirmationNote: z.string().optional(),
           }),
         ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (trx) => {});
+      return await ctx.db.transaction(async (trx) => {
+        // Sync the event itself
+        await trx
+          .insert(events)
+          .values({
+            id: input.id,
+            title: input.title,
+            createdByEmail: input.creator,
+            location: input.location,
+            notes: input.notes,
+            createdAt: input.created,
+            updatedAt: input.updated,
+            start: input.start,
+            end: input.end,
+            syncedAt: new Date(),
+          })
+          .onDuplicateKeyUpdate({
+            set: {
+              title: input.title,
+              createdByEmail: input.creator,
+              location: input.location,
+              notes: input.notes,
+              createdAt: input.created,
+              updatedAt: input.updated,
+              start: input.start,
+              end: input.end,
+              syncedAt: new Date(),
+            },
+          });
+        // Delete all shifts for this event
+        await trx.delete(shifts).where(eq(shifts.eventId, input.id));
+        // Sync the shifts
+        await trx.insert(shifts).values(
+          input.shifts.map((shift) => {
+            return {
+              eventId: shift.eventId,
+              role: shift.role,
+              start: shift.start,
+              end: shift.end,
+              userEmail: shift.user,
+              filledBy: shift.filledBy,
+              confirmationNote: shift.confirmationNote,
+            };
+          }),
+        );
+        const newShifts = await trx
+          .select()
+          .from(shifts)
+          .where(eq(shifts.eventId, input.id));
+        const newEvent = await trx.query.events.findFirst({
+          where: eq(events.id, input.id),
+        });
+
+        return { ...newEvent, shifts: newShifts };
+      });
     }),
   // saveShift: protectedProcedure.input(z.object({isFilled: z.boolean(),
   //   id: z.string(),
