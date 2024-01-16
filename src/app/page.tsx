@@ -1,13 +1,13 @@
 import { api } from "~/trpc/server";
-import { addDays, subDays } from "date-fns";
+import { addMonths, subMonths } from "date-fns";
 import DashboardMessages from "~/components/dashboard/DashboardMessages";
-import PastShifts from "~/components/dashboard/PastShifts";
+import RecentShifts from "~/components/dashboard/RecentShifts";
 import UpcomingShifts from "~/components/dashboard/UpcomingShifts";
 
 export default async function Home() {
   const events = await api.events.getEvents.query({
-    start: subDays(new Date(), 60),
-    end: addDays(new Date(), 60),
+    start: subMonths(new Date(), 1),
+    end: addMonths(new Date(), 1),
   });
 
   if (events)
@@ -20,7 +20,7 @@ export default async function Home() {
         <UpcomingShifts events={events} />
         <div className="flex gap-4 overflow-auto p-2">
           <DashboardMessages />
-          <PastShifts events={events} />
+          <RecentShifts events={events} />
         </div>
       </div>
     );
