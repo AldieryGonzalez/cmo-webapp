@@ -21,10 +21,10 @@ import { v4 as uuid } from "uuid";
 export const mysqlTable = mysqlTableCreator((name) => `cmo-webapp_${name}`);
 
 export const events = mysqlTable("event", {
-  id: varchar("id", { length: 256 }).primaryKey().notNull(),
-  title: varchar("title", { length: 256 }).notNull(),
+  id: varchar("id", { length: 255 }).primaryKey().notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
   createdByEmail: varchar("createdByEmail", { length: 255 }).notNull(),
-  location: varchar("location", { length: 256 }).notNull(),
+  location: varchar("location", { length: 255 }).notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
@@ -56,7 +56,8 @@ export const shiftsRelations = relations(shifts, ({ one }) => ({
 }));
 
 export const users = mysqlTable("user", {
-  email: varchar("email", { length: 255 }).notNull().primaryKey(),
+  id: varchar("id", { length: 255 }).primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
   firstName: varchar("name", { length: 255 }).notNull(),
   lastName: varchar("lastName", { length: 255 }).notNull(),
   phoneNumber: varchar("phoneNumber", { length: 255 }),
@@ -72,4 +73,14 @@ export const syncs = mysqlTable("syncs", {
   id: serial("id"),
   userEmail: varchar("userEmail", { length: 255 }).notNull(),
   lastSynced: timestamp("lastSynced").notNull().defaultNow(),
+});
+
+export const savedShifts = mysqlTable("savedShifts", {
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(uuid),
+  userId: varchar("userId", { length: 255 }).notNull(),
+  eventId: varchar("shiftId", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  role: varchar("role", { length: 255 }).notNull(),
+  start: timestamp("start").notNull(),
+  end: timestamp("end").notNull(),
 });

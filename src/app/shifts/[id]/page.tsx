@@ -11,6 +11,7 @@ import { isPast } from "date-fns";
 import { cn } from "~/lib/utils";
 import { currentUser, type User } from "@clerk/nextjs/server";
 import { api } from "~/trpc/server";
+import { Button } from "~/components/ui/button";
 
 type ShiftPageProps = {
   params: {
@@ -36,7 +37,6 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
       })}
     >
       {stringify(shift)}
-      {shift.id}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="absolute bottom-0 right-0 top-0 rounded-e-full bg-purple-800 px-2">
@@ -100,14 +100,23 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
 const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
   const user = await currentUser();
   const event = await api.events.getEvent.query(params.id);
+  const saveShift = api.events.saveShift.mutate;
   return (
     <div className="container py-8">
       <section className="flex flex-col space-y-2">
-        <h1 className="text-xl font-medium md:text-2xl">{event.title}</h1>
+        <div className="flex justify-between">
+          <h1 className="text-xl font-medium md:text-2xl">{event.title}</h1>
+          <Button variant={"nu"} className="hidden sm:inline-flex">
+            <span>Save Shift</span>
+          </Button>
+        </div>
         <div className="flex flex-col text-sm text-gray-600 sm:flex-row">
           <p>{longTimeRangeString(event)}</p>
           <p>{`@${event.location}`}</p>
         </div>
+        <Button variant={"nu"} className=" sm:hidden">
+          <span>Save Shift</span>
+        </Button>
         <div>
           <label className="text-lg font-medium">Shifts</label>
           <hr className="p-0.5"></hr>

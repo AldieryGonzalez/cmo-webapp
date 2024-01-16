@@ -9,11 +9,11 @@ import {
   protectedGapiProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { events, shifts, syncs } from "~/server/db/schema";
+import { events, savedShifts, shifts, syncs } from "~/server/db/schema";
 
 const InputShift = z.object({
   isFilled: z.boolean(),
-  id: z.string(),
+  id: z.string().optional(),
   eventId: z.string(),
   filledBy: z.string().nullable(),
   user: z.string().nullable(),
@@ -242,16 +242,29 @@ export const eventRouter = createTRPCRouter({
       return { ...newEvent, shifts: newAllShifts };
     });
   }),
-  // saveShift: protectedProcedure.input(z.object({isFilled: z.boolean(),
-  //   id: z.string(),
-  //   eventId: z.string(),
-  //   filledBy: z.string().optional(),
-  //   user: z.string().optional(),
-  //   role: z.string(),
-  //   start: z.date(),
-  //   end: z.date(),
-  //   confirmationNote: z.string()})).mutation(async ({ ctx, input }) => {
-  //   const res = await ctx.db.insert()
+  saveShift: protectedProcedure
+    .input(InputShift)
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(savedShifts)
+        .values({
+          id: input.id,
+          userId: ctx.auth.user.id,
+          eventId: input.eventId,
+          role: input.role,
+          start: input.start,
+          end: input.end,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            userId: ctx.auth.user.id,
+            eventId: input.eventId,
+            role: input.role,
+            start: input.start,
+            end: input.end,
+          },
+        });
+    }),
 });
 export type EventRouter = typeof eventRouter;
 export type EventsOutput = inferRouterOutputs<EventRouter>;
