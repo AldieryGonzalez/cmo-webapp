@@ -392,6 +392,6 @@ export const contacts = [
 ];
 
 export const alternateNames = {
-  aldiery: "Aldi",
-  sheyla: "Shayla",
+  aldi: "aldiery",
+  shayla: "sheyla",
 };

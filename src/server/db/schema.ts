@@ -47,6 +47,7 @@ export const shifts = mysqlTable("shift", {
   userEmail: varchar("userEmail", { length: 255 }),
   filledBy: varchar("filledBy", { length: 255 }),
   confirmationNote: text("confirmationNote"),
+  cancelled: boolean("cancelled").notNull().default(false),
 });
 
 export const shiftsRelations = relations(shifts, ({ one }) => ({
@@ -70,5 +71,5 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const syncs = mysqlTable("syncs", {
   id: serial("id"),
   userEmail: varchar("userEmail", { length: 255 }).notNull(),
-  lastSynced: timestamp("lastSynced").notNull(),
+  lastSynced: timestamp("lastSynced").notNull().defaultNow(),
 });

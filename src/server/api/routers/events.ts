@@ -15,12 +15,13 @@ const InputShift = z.object({
   isFilled: z.boolean(),
   id: z.string(),
   eventId: z.string(),
-  filledBy: z.string().optional(),
-  user: z.string().optional(),
+  filledBy: z.string().nullable(),
+  user: z.string().nullable(),
   role: z.string(),
   start: z.date(),
   end: z.date(),
-  confirmationNote: z.string().optional(),
+  confirmationNote: z.string().nullable(),
+  cancelled: z.boolean(),
 });
 const InputEvent = z.object({
   title: z.string(),
@@ -33,6 +34,7 @@ const InputEvent = z.object({
   end: z.date(),
   notes: z.string(),
   shifts: z.array(InputShift),
+  cancelled: z.boolean(),
 });
 
 export const eventRouter = createTRPCRouter({
@@ -54,6 +56,7 @@ export const eventRouter = createTRPCRouter({
         timeMax: end,
         orderBy: "startTime",
         singleEvents: true,
+        maxResults: 500,
       });
       const gcalEvents = data.items;
       if (!gcalEvents) {
@@ -119,6 +122,7 @@ export const eventRouter = createTRPCRouter({
             updatedAt: input.updated,
             start: input.start,
             end: input.end,
+            cancelled: input.cancelled,
             syncedAt: new Date(),
           })
           .onDuplicateKeyUpdate({
@@ -131,25 +135,29 @@ export const eventRouter = createTRPCRouter({
               updatedAt: input.updated,
               start: input.start,
               end: input.end,
+              cancelled: input.cancelled,
               syncedAt: new Date(),
             },
           });
         // Delete all shifts for this event
         await trx.delete(shifts).where(eq(shifts.eventId, input.id));
         // Sync the shifts
-        await trx.insert(shifts).values(
-          input.shifts.map((shift) => {
-            return {
-              eventId: shift.eventId,
-              role: shift.role,
-              start: shift.start,
-              end: shift.end,
-              userEmail: shift.user,
-              filledBy: shift.filledBy,
-              confirmationNote: shift.confirmationNote,
-            };
-          }),
-        );
+        if (input.shifts.length > 0) {
+          await trx.insert(shifts).values(
+            input.shifts.map((shift) => {
+              return {
+                eventId: shift.eventId,
+                role: shift.role,
+                start: shift.start,
+                end: shift.end,
+                userEmail: shift.user,
+                filledBy: shift.filledBy,
+                confirmationNote: shift.confirmationNote,
+                cancelled: shift.cancelled,
+              };
+            }),
+          );
+        }
         const newShifts = await trx
           .select()
           .from(shifts)
@@ -161,6 +169,39 @@ export const eventRouter = createTRPCRouter({
         return { ...newEvent, shifts: newShifts };
       });
     }),
+  findEventsNotInDb: protectedGapiProcedure.query(async ({ ctx }) => {
+    const ids = await ctx.db.select({ id: events.id }).from(events);
+    const dbSet = new Set(ids.map((id) => id.id));
+    const { data } = await ctx.calendar.events.list({
+      timeMin: new Date("2023-08-01").toISOString(),
+      orderBy: "startTime",
+      singleEvents: true,
+      maxResults: 500,
+    });
+    const gcalEvents = data.items;
+    if (!gcalEvents) {
+      throw new TRPCError({
+        message: "FAILED TO GET GCAL EVENTS",
+        code: "INTERNAL_SERVER_ERROR",
+      });
+    }
+    const res = gcalEvents
+      .filter((gce) => !dbSet.has(gce.id ?? ""))
+      .map((event) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { openShifts, filledShifts, allShifts, ...newEvent } =
+          new CmoEvent(event);
+        const newAllShifts = allShifts.map((shift) => {
+          return {
+            ...shift,
+            isFilled: shift.filledBy !== null,
+          };
+        });
+
+        return { ...newEvent, shifts: newAllShifts };
+      });
+    return res;
+  }),
   // saveShift: protectedProcedure.input(z.object({isFilled: z.boolean(),
   //   id: z.string(),
   //   eventId: z.string(),

@@ -26,6 +26,8 @@ const SyncPage: React.FC = () => {
     { start: dateRange?.from ?? baseDate, end: dateRange?.to ?? today },
     { enabled: false },
   );
+  // const { data, error, isLoading, refetch } =
+  //   api.events.findEventsNotInDb.useQuery(undefined, { enabled: false });
 
   const renderSwitch = () => {
     switch (true) {
@@ -59,32 +61,37 @@ type EventSyncContentProps = {
 };
 
 const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
+  const syncEvent = api.events.syncEvent.useMutation();
   return (
     <div>
-      console.log(events);
       {events.map((event) => {
         return (
           <div
             key={event.id}
-            className="m-1 justify-center rounded-md border-2 border-purple-900/15 p-3 shadow-md"
+            className="m-1 justify-center rounded-md border-2  border-purple-900/15 bg-white p-3 shadow-md"
           >
             <h3 className="text-xl font-bold">{`${
               event.title
-            } - ${event.start.toDateString()}`}</h3>
+            } - ${event.start.toDateString()} - ${event.location}`}</h3>
+            {event.cancelled && (
+              <p className="text-lg font-semibold text-red-600 underline">
+                Cancelled
+              </p>
+            )}
             <p className="text-lg font-semibold italic">
-              {event.location} {event.start.toLocaleString()}
+              {event.start.toLocaleString()}
               {" - "}
               {event.end.toLocaleString()}
             </p>
 
-            <p>{event.notes}</p>
+            <p className="whitespace-pre">{event.notes}</p>
             <p className="text-sm font-semibold">
               Created by:
               {event.creator}
             </p>
             <Collapsible>
               <CollapsibleTrigger>
-                <div className="flex">
+                <div className="flex text-lg">
                   Shifts <ChevronDown />
                 </div>
               </CollapsibleTrigger>
@@ -96,13 +103,18 @@ const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
                 </ul>
               </CollapsibleContent>
             </Collapsible>
-            <div>
-              <p className="text-right text-xs">
-                {"created: "}
-                {event.updated.toLocaleString()} - {"updated: "}
-                {event.created.toLocaleString()}
-              </p>
-              <p className="text-right text-xs">{event.id}</p>
+            <div className="mt-4 flex justify-between">
+              <Button onClick={() => syncEvent.mutate(event)}>
+                Sync Event
+              </Button>
+              <div>
+                <p className="text-right text-xs">
+                  {"created: "}
+                  {event.updated.toLocaleString()} - {"updated: "}
+                  {event.created.toLocaleString()}
+                </p>
+                <p className="text-right text-xs">{event.id}</p>
+              </div>
             </div>
           </div>
         );
@@ -118,11 +130,20 @@ type ShiftCardProps = {
 const ShiftCard: React.FC<ShiftCardProps> = ({ shift }) => {
   return (
     <li className="rounded-full border-2 border-purple-900/5 px-4 py-2">
-      <div>
-        {shift.isFilled ? shift.filledBy : "(open)"} ({shift.role}) -{" "}
-        {shift.start.toLocaleTimeString()} {shift.end.toLocaleTimeString()}
-        {shift.confirmationNote && ` - ${shift.confirmationNote}`}
-      </div>
+      {shift.cancelled ? (
+        <div className="text-red-500 line-through">
+          {shift.isFilled ? shift.filledBy : "(open)"} ({shift.role}) -{" "}
+          {shift.start.toLocaleTimeString()} {shift.end.toLocaleTimeString()}
+          {shift.confirmationNote && ` - ${shift.confirmationNote}`}
+        </div>
+      ) : (
+        <div>
+          {shift.isFilled ? shift.filledBy : "(open)"} ({shift.role}) -{" "}
+          {shift.start.toLocaleTimeString()} {shift.end.toLocaleTimeString()}
+          {shift.confirmationNote && ` - ${shift.confirmationNote}`}
+          {` - ${shift.cancelled} `}
+        </div>
+      )}
       <p className="text-xs font-semibold">
         {shift.user ?? "Not in system yet"}
       </p>

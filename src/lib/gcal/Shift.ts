@@ -9,7 +9,8 @@ interface ShiftParams {
   eventEnd: Date;
   start: string;
   end: string;
-  confirmationNote: string;
+  confirmationNote: string | null;
+  cancelled: boolean;
 }
 export class Shift {
   id: string;
@@ -19,7 +20,8 @@ export class Shift {
   role: string;
   start: Date;
   end: Date;
-  confirmationNote: string;
+  confirmationNote: string | null;
+  cancelled: boolean;
 
   constructor(obj: ShiftParams) {
     this.id = obj.id;
@@ -30,6 +32,7 @@ export class Shift {
     this.start = timeStringToDate(obj.eventStart, obj.start);
     this.end = timeStringToDate(obj.eventEnd, obj.end);
     this.confirmationNote = obj.confirmationNote;
+    this.cancelled = obj.cancelled;
   }
   get isFilled() {
     return this.filledBy !== null;

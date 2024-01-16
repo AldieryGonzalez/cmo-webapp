@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { type calendar_v3 } from "@googleapis/calendar";
 import { Shift } from "./Shift";
-import { format as dateFormat } from "date-fns";
 
 export type MatchMap = {
   filled: RegExpMatchArray[];
@@ -10,9 +9,10 @@ export type MatchMap = {
 };
 
 const fullShiftPattern =
-  /^([A-Z][a-z]+ [A-Z]\.)\s\(([^)]+)\):\s((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|[Cc]lose))\s(\([A-Z]+ confirmed \d{1,2}\/\d{1,2}\/\d{2,4}[^)]*\))$/;
+  /^(\[cancel{1,2}ed\]\s*)?([a-z]+ [a-z]\.?)\s*\(([^)]+)\):?\s*((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|close))\s*(\([a-z]+ confirmed.*)?$/i;
 const openShiftPattern =
-  /^open\s\(([^)]+)\):\s((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|[Cc]lose))$/;
+  /^open\s*\(([^)]+)\):\s*((\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m|close))$/i;
+const cancelledPattern = RegExp("\\[cancel{1,2}ed\\]", "gi");
 export class CmoEvent {
   title: string;
   location: string;
@@ -26,21 +26,25 @@ export class CmoEvent {
   filledShifts: Shift[];
   start: Date;
   end: Date;
+  cancelled: boolean;
 
   constructor(event: calendar_v3.Schema$Event) {
-    this.title = event.summary!;
-    this.location = event.location!;
+    this.title = event.summary!.replaceAll(cancelledPattern, "").trim();
+    this.location = event.location ?? "Other";
     this.id = event.id!;
     this.creator = event.creator!.email!;
     this.updated = new Date(event.updated!);
     this.created = new Date(event.created!);
     this.start = new Date(event.start!.dateTime!);
     this.end = new Date(event.end!.dateTime!);
+    this.cancelled = cancelledPattern.test(event.summary!);
 
     const matchMap: MatchMap = { filled: [], open: [], extra: [] };
     const cleanDescription = event
       .description!.replaceAll("<span>", "")
       .replaceAll("</span>", "")
+      .replaceAll("<b>", "")
+      .replaceAll("</b>", "")
       .replaceAll("<br>", "\n");
     const descLines = cleanDescription.split("\n");
     const roleCount: Record<string, number> = {};
@@ -69,20 +73,22 @@ export class CmoEvent {
         eventEnd: this.end,
         start: shift[3]!,
         end: shift[4]!,
+        cancelled: false,
       });
     });
     this.filledShifts = matchMap.filled.map((shift) => {
-      roleCount[shift[2]!] = (roleCount[shift[2]!] ?? 0) + 1;
+      roleCount[shift[3]!] = (roleCount[shift[3]!] ?? 0) + 1;
       return new Shift({
-        id: this.id + "-" + shift[2] + roleCount[shift[2]!],
+        id: this.id + "-" + shift[3] + roleCount[shift[3]!],
         eventId: this.id,
-        filledBy: shift[1]!,
-        role: shift[2]!,
+        filledBy: shift[2]!,
+        role: shift[3]!,
         eventStart: this.start,
         eventEnd: this.end,
-        start: shift[4]!,
-        end: shift[5]!,
-        confirmationNote: shift[6]!,
+        start: shift[5]!,
+        end: shift[6]!,
+        confirmationNote: shift[7] ?? null,
+        cancelled: !!shift[1],
       });
     });
 
