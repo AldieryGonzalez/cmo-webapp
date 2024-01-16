@@ -1,58 +1,31 @@
-"use client";
-import { addDays } from "date-fns";
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
-import type { DateRange } from "react-day-picker";
+
 import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-import { DateRangePicker } from "~/components/ui/date-range-picker";
+
+import { api } from "~/trpc/server";
+
 import { type EventsOutput } from "~/server/api/routers/events";
-import { api } from "~/trpc/react";
 
-const SyncPage: React.FC = () => {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 30),
-  });
+const SyncPage: React.FC = async () => {
+  const events = await api.events.findUpdatedEvents.query();
 
-  const baseDate = new Date("2023-09-01");
-  const today = new Date();
-
-  const { data, error, isLoading, refetch } = api.events.getEvents.useQuery(
-    { start: dateRange?.from ?? baseDate, end: dateRange?.to ?? today },
-    { enabled: false },
-  );
-  // const { data, error, isLoading, refetch } =
-  //   api.events.findEventsNotInDb.useQuery(undefined, { enabled: false });
-
-  const renderSwitch = () => {
-    switch (true) {
-      case isLoading:
-        return <h3>Click Refresh button to load Google Calendar Events</h3>;
-      case error != null:
-        return <h3>Error: {error.message}</h3>;
-      default:
-        return <EventSyncContent events={data} />;
-    }
-  };
+  if (events.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center text-5xl font-semibold">
+        <p className="animate-[ping_5s_ease-in-out_infinite]">Up to date!!</p>
+      </div>
+    );
+  }
 
   return (
-    <main>
-      <div className="flex justify-center">
-        <Button variant={"outline"} onClick={() => refetch()}>
-          Refresh Diff Checker
-        </Button>
-        <DateRangePicker
-          dateRange={dateRange}
-          handleDateChange={(range) => setDateRange(range)}
-        />
-      </div>
-      <div className="flex justify-center">{renderSwitch()}</div>
-    </main>
+    <div className="flex justify-center">
+      <EventSyncContent events={events} />
+    </div>
   );
 };
 
@@ -61,7 +34,7 @@ type EventSyncContentProps = {
 };
 
 const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
-  const syncEvent = api.events.syncEvent.useMutation();
+  const syncEvent = api.events.syncEvent.mutate;
   return (
     <div>
       {events.map((event) => {
@@ -104,9 +77,7 @@ const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
               </CollapsibleContent>
             </Collapsible>
             <div className="mt-4 flex justify-between">
-              <Button onClick={() => syncEvent.mutate(event)}>
-                Sync Event
-              </Button>
+              <Button onClick={() => syncEvent(event)}>Sync Event</Button>
               <div>
                 <p className="text-right text-xs">
                   {"created: "}

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
 
@@ -9,7 +9,7 @@ import {
   protectedGapiProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { events, shifts } from "~/server/db/schema";
+import { events, shifts, syncs } from "~/server/db/schema";
 
 const InputShift = z.object({
   isFilled: z.boolean(),
@@ -201,6 +201,46 @@ export const eventRouter = createTRPCRouter({
         return { ...newEvent, shifts: newAllShifts };
       });
     return res;
+  }),
+  findUpdatedEvents: protectedGapiProcedure.query(async ({ ctx }) => {
+    const [res] = await ctx.db
+      .select({ date: syncs.lastSynced })
+      .from(syncs)
+      .orderBy(desc(syncs.lastSynced))
+      .limit(1);
+    console.log(res);
+    if (!res) {
+      throw new TRPCError({
+        message: "FAILED TO GET LAST SYNC DATE",
+        code: "INTERNAL_SERVER_ERROR",
+      });
+    }
+    const { data } = await ctx.calendar.events.list({
+      orderBy: "updated",
+      singleEvents: true,
+      updatedMin: res.date.toISOString(),
+    });
+    const gcalEvents = data.items;
+    if (!gcalEvents) {
+      throw new TRPCError({
+        message: "FAILED TO GET GCAL EVENTS",
+        code: "INTERNAL_SERVER_ERROR",
+      });
+    }
+    return gcalEvents.map((event) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { openShifts, filledShifts, allShifts, ...newEvent } = new CmoEvent(
+        event,
+      );
+      const newAllShifts = allShifts.map((shift) => {
+        return {
+          ...shift,
+          isFilled: shift.filledBy !== null,
+        };
+      });
+
+      return { ...newEvent, shifts: newAllShifts };
+    });
   }),
   // saveShift: protectedProcedure.input(z.object({isFilled: z.boolean(),
   //   id: z.string(),
