@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
 
@@ -274,7 +274,8 @@ export const eventRouter = createTRPCRouter({
       .select()
       .from(savedShifts)
       .where(eq(savedShifts.userId, ctx.auth.user.id))
-      .leftJoin(events, eq(events.id, savedShifts.eventId));
+      .leftJoin(events, eq(events.id, savedShifts.eventId))
+      .orderBy(asc(savedShifts.start));
     return shifts;
   }),
 });
