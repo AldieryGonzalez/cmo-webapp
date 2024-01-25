@@ -86,9 +86,7 @@ export function allShiftsStringArray(event: Event) {
 }
 
 export function hasOpenShifts(event: Event) {
-  return (
-    getOpenShifts(event).length > 0 && !event.title.startsWith("[Canceled]")
-  );
+  return getOpenShifts(event).length > 0 && !event.cancelled;
 }
 
 export function hasPast(event: Event) {
