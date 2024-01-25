@@ -29,23 +29,24 @@ export class CmoEvent {
   cancelled: boolean;
 
   constructor(event: calendar_v3.Schema$Event) {
-    this.title = event.summary!.replaceAll(cancelledPattern, "").trim();
+    this.title = event.summary?.replaceAll(cancelledPattern, "").trim() ?? "";
     this.location = event.location ?? "Other";
     this.id = event.id!;
-    this.creator = event.creator!.email!;
+    this.creator = event.creator?.email ?? event.organizer?.email ?? "";
     this.updated = new Date(event.updated!);
     this.created = new Date(event.created!);
-    this.start = new Date(event.start!.dateTime!);
-    this.end = new Date(event.end!.dateTime!);
+    this.start = new Date(event.start?.dateTime ?? new Date(0));
+    this.end = new Date(event.end?.dateTime ?? new Date(0));
     this.cancelled = cancelledPattern.test(event.summary!);
 
     const matchMap: MatchMap = { filled: [], open: [], extra: [] };
-    const cleanDescription = event
-      .description!.replaceAll("<span>", "")
-      .replaceAll("</span>", "")
-      .replaceAll("<b>", "")
-      .replaceAll("</b>", "")
-      .replaceAll("<br>", "\n");
+    const cleanDescription =
+      event.description
+        ?.replaceAll("<span>", "")
+        .replaceAll("</span>", "")
+        .replaceAll("<b>", "")
+        .replaceAll("</b>", "")
+        .replaceAll("<br>", "\n") ?? "";
     const descLines = cleanDescription.split("\n");
     const roleCount: Record<string, number> = {};
 

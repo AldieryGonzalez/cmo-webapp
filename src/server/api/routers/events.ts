@@ -216,9 +216,9 @@ export const eventRouter = createTRPCRouter({
       });
     }
     const { data } = await ctx.calendar.events.list({
-      orderBy: "updated",
-      singleEvents: true,
       updatedMin: res.date.toISOString(),
+      orderBy: "updated",
+      timeMin: res.date.toISOString(),
     });
     const gcalEvents = data.items;
     if (!gcalEvents) {
@@ -227,20 +227,24 @@ export const eventRouter = createTRPCRouter({
         code: "INTERNAL_SERVER_ERROR",
       });
     }
-    return gcalEvents.map((event) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { openShifts, filledShifts, allShifts, ...newEvent } = new CmoEvent(
-        event,
-      );
-      const newAllShifts = allShifts.map((shift) => {
-        return {
-          ...shift,
-          isFilled: shift.filledBy !== null,
-        };
-      });
+    return gcalEvents
+      .filter((event) => {
+        const eventUpdated = new Date(event.updated ?? 0);
+        return eventUpdated > res.date;
+      })
+      .map((event) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { openShifts, filledShifts, allShifts, ...newEvent } =
+          new CmoEvent(event);
+        const newAllShifts = allShifts.map((shift) => {
+          return {
+            ...shift,
+            isFilled: shift.filledBy !== null,
+          };
+        });
 
-      return { ...newEvent, shifts: newAllShifts };
-    });
+        return { ...newEvent, shifts: newAllShifts };
+      });
   }),
   saveShift: protectedProcedure
     .input(InputShift)
@@ -265,6 +269,14 @@ export const eventRouter = createTRPCRouter({
           },
         });
     }),
+  getSavedShifts: protectedProcedure.query(async ({ ctx }) => {
+    const shifts = await ctx.db
+      .select()
+      .from(savedShifts)
+      .where(eq(savedShifts.userId, ctx.auth.user.id))
+      .leftJoin(events, eq(events.id, savedShifts.eventId));
+    return shifts;
+  }),
 });
 export type EventRouter = typeof eventRouter;
 export type EventsOutput = inferRouterOutputs<EventRouter>;

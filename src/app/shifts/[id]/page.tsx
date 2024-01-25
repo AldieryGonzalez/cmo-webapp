@@ -1,3 +1,6 @@
+import { currentUser, type User } from "@clerk/nextjs/server";
+import { isPast } from "date-fns";
+import { Contact, MoreHorizontal, XCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -5,13 +8,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Contact, MoreHorizontal, ShoppingCart, XCircle } from "lucide-react";
 import { longTimeRangeString, stringify, type Shift } from "~/lib/events/utils";
-import { isPast } from "date-fns";
 import { cn } from "~/lib/utils";
-import { currentUser, type User } from "@clerk/nextjs/server";
 import { api } from "~/trpc/server";
-import { Button } from "~/components/ui/button";
+import SaveShiftButton from "./_components/SaveShiftButton";
+import SaveSpecificShiftButton from "./_components/SaveSpecificShiftButton";
 
 type ShiftPageProps = {
   params: {
@@ -26,7 +27,6 @@ interface ShiftButtonProps {
 
 const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
   const usersShift = shift.filledBy == user?.lastName;
-  const canAddToCart = !isPast(shift.end) && !shift.isFilled;
   const canRequestSub = !isPast(shift.end) && usersShift;
   return (
     <li
@@ -52,13 +52,7 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
           {!shift.isFilled && (
             <>
               <DropdownMenuItem asChild>
-                <button
-                  disabled={!canAddToCart}
-                  className="flex w-52 items-center gap-3 rounded text-left text-purple-800 hover:bg-black/20 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <ShoppingCart size={20} />
-                  Add to Cart
-                </button>
+                <SaveSpecificShiftButton shift={shift} />
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>
@@ -68,7 +62,7 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
               <DropdownMenuItem asChild>
                 <button
                   disabled={!canRequestSub}
-                  className="disabled:cursor-autonot-allowed flex w-52 items-center gap-2 rounded text-left text-red-700 hover:bg-black/20 disabled:opacity-50"
+                  className="flex w-52 items-center gap-2 rounded text-left text-red-700 hover:bg-black/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <XCircle size={20} />
                   <span>Request Shift Sub</span>
@@ -86,7 +80,7 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
           {shift.confirmationNote && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="max-w-[30ch] font-thin text-gray-600">
+              <DropdownMenuItem className="max-w-[30ch] font-light text-gray-600">
                 {shift.confirmationNote}
               </DropdownMenuItem>
             </>
@@ -100,23 +94,19 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
 const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
   const user = await currentUser();
   const event = await api.events.getEvent.query(params.id);
-  const saveShift = api.events.saveShift.mutate;
   return (
     <div className="container py-8">
       <section className="flex flex-col space-y-2">
         <div className="flex justify-between">
           <h1 className="text-xl font-medium md:text-2xl">{event.title}</h1>
-          <Button variant={"nu"} className="hidden sm:inline-flex">
-            <span>Save Shift</span>
-          </Button>
+
+          <SaveShiftButton event={event} />
         </div>
         <div className="flex flex-col text-sm text-gray-600 sm:flex-row">
           <p>{longTimeRangeString(event)}</p>
           <p>{`@${event.location}`}</p>
         </div>
-        <Button variant={"nu"} className=" sm:hidden">
-          <span>Save Shift</span>
-        </Button>
+        <SaveShiftButton event={event} mobile />
         <div>
           <label className="text-lg font-medium">Shifts</label>
           <hr className="p-0.5"></hr>

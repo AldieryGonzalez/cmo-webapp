@@ -1,5 +1,5 @@
-import type { EventsOutput } from "~/server/api/routers/events";
 import { format as dateFormat } from "date-fns";
+import type { EventsOutput } from "~/server/api/routers/events";
 
 export type Event = EventsOutput["getEvents"][0];
 type NextUrlSearchParams = Record<string, string | undefined>;

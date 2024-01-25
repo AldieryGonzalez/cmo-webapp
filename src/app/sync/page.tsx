@@ -1,6 +1,5 @@
 import { ChevronDown } from "lucide-react";
 
-import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,9 +9,10 @@ import {
 import { api } from "~/trpc/server";
 
 import { type EventsOutput } from "~/server/api/routers/events";
+import SyncButton from "./_components/button";
 
 const SyncPage: React.FC = async () => {
-  const events = await api.events.findUpdatedEvents.query();
+  const events = await api.events.findEventsNotInDb.query();
 
   if (events.length === 0) {
     return (
@@ -34,7 +34,6 @@ type EventSyncContentProps = {
 };
 
 const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
-  const syncEvent = api.events.syncEvent.mutate;
   return (
     <div>
       {events.map((event) => {
@@ -77,12 +76,12 @@ const EventSyncContent: React.FC<EventSyncContentProps> = ({ events }) => {
               </CollapsibleContent>
             </Collapsible>
             <div className="mt-4 flex justify-between">
-              <Button onClick={() => syncEvent(event)}>Sync Event</Button>
+              <SyncButton event={event} />
               <div>
                 <p className="text-right text-xs">
                   {"created: "}
-                  {event.updated.toLocaleString()} - {"updated: "}
-                  {event.created.toLocaleString()}
+                  {event.created.toLocaleString()} - {"updated: "}
+                  {event.updated.toLocaleString()}
                 </p>
                 <p className="text-right text-xs">{event.id}</p>
               </div>
