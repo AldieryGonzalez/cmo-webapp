@@ -31,7 +31,7 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
   return (
     <li
       className={cn({
-        ["relative w-full rounded-full border-2 py-1 pl-4 pr-10 shadow-md"]:
+        ["relative w-full rounded-full border-2 py-1 pl-4 pr-10 bg-primary-foreground shadow-md"]:
           true,
         ["border-black/50 font-medium"]: usersShift,
       })}
@@ -47,7 +47,7 @@ const ShiftButton: React.FC<ShiftButtonProps> = async ({ shift, user }) => {
           align="end"
           alignOffset={-26}
           side="bottom"
-          className="rounded-lg bg-white px-3 py-2.5"
+          className="rounded-lg bg-primary-foreground px-3 py-2.5"
         >
           {!shift.isFilled && (
             <>
@@ -102,7 +102,7 @@ const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
 
           <SaveShiftButton event={event} />
         </div>
-        <div className="flex flex-col text-sm text-gray-600 sm:flex-row">
+        <div className="flex flex-col text-sm text-muted-foreground sm:flex-row">
           <p>{longTimeRangeString(event)}</p>
           <p>{`@${event.location}`}</p>
         </div>

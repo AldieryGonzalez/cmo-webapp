@@ -27,7 +27,7 @@ type ShiftCardProps = {
 
 const DaySection: React.FC<DaySectionProps> = ({ day, events }) => {
   return (
-    <div>
+    <div className="space-y-1">
       <h3 className="text-lg font-semibold">{day}</h3>
       {events.map((event) => (
         <ShiftCard key={event.id} event={event} />

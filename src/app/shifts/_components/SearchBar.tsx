@@ -1,16 +1,9 @@
-import React, { useState } from "react";
-import { Input, type InputProps } from "~/components/ui/input";
 import { SearchIcon, SlidersHorizontal } from "lucide-react";
-import { cn } from "~/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "~/components/ui/sheet";
-import { DateRangePicker } from "~/components/ui/date-range-picker";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { type DateRange } from "react-day-picker";
+import { DateRangePicker } from "~/components/ui/date-range-picker";
+import { Input, type InputProps } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
   Select,
@@ -19,8 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "~/components/ui/sheet";
 import { getDateRangeFromSearchParams } from "~/lib/gcal/utils";
-import { usePathname, useRouter } from "next/navigation";
+import { cn } from "~/lib/utils";
 
 export type SearchProps = React.InputHTMLAttributes<HTMLInputElement>;
 
@@ -78,7 +78,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
     return (
       <div
         className={cn(
-          "flex h-10 w-full items-center rounded-md border border-input bg-white px-3 text-sm ring-offset-background focus-within:ring-1 focus-within:ring-ring focus-within:ring-offset-2",
+          "flex h-10 w-full items-center rounded-md border border-input bg-primary-foreground px-3 text-sm ring-offset-background focus-within:ring-1 focus-within:ring-ring focus-within:ring-offset-2",
           className,
         )}
       >
@@ -90,7 +90,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           onChange={handleSearchChange}
           value={searchControl}
           placeholder="Search for an ensemble, musician, date or role"
-          className="w-full p-2 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full p-2 placeholder:text-muted-foreground bg-inherit focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
         <Sheet>
           <SheetTrigger>

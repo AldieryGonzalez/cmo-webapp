@@ -1,14 +1,14 @@
+import { TabsContent } from "@radix-ui/react-tabs";
+import Link from "next/link";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { TabsContent } from "@radix-ui/react-tabs";
-import { groupEventsByDay } from "~/lib/gcal/utils";
-import Link from "next/link";
-import { type EventsOutput } from "~/server/api/routers/events";
 import { hasOpenShifts, timeRangeString } from "~/lib/events/utils";
+import { groupEventsByDay } from "~/lib/gcal/utils";
+import { type EventsOutput } from "~/server/api/routers/events";
 
 type CmoEvent = EventsOutput["getEvents"][0];
 
@@ -27,7 +27,7 @@ type ShiftCardProps = {
 
 const DaySection: React.FC<DaySectionProps> = ({ day, events }) => {
   return (
-    <div>
+    <div className="space-y-1">
       <h3 className="text-xl font-semibold">{day}</h3>
       {events.map((event) => (
         <ShiftCard key={event.id} event={event} />
