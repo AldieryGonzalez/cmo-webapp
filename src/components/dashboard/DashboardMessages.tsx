@@ -41,8 +41,8 @@ const DashboardMessages = () => {
   return (
     <section className="flex grow flex-col">
       <h3 className="block text-xl font-normal">Announcements</h3>
-      <div className="relative grow overflow-y-auto rounded-md bg-zinc-200 ">
-        <nav className="sticky left-0 right-0 top-0 flex h-7 justify-end gap-2 rounded-t-md bg-zinc-400 px-6 py-0.5">
+      <div className="relative grow overflow-y-auto rounded-md bg-card border-card-foreground/35 border shadow-sm shadow-primary/10">
+        <nav className="sticky left-0 right-0 top-0 flex h-7 justify-end gap-2 bg-zinc-400 px-6 py-0.5">
           <p>{`${page} of ${totalPages}`}</p>
           <button>
             <ChevronLeft />

@@ -1,8 +1,8 @@
-import { inEvent } from "~/lib/events/utils";
-import DashboardShiftCard from "./DashboardShiftCard";
-import { type EventsOutput } from "~/server/api/routers/events";
 import { isAfter } from "date-fns";
 import Link from "next/link";
+import { inEvent } from "~/lib/events/utils";
+import { type EventsOutput } from "~/server/api/routers/events";
+import DashboardShiftCard from "./DashboardShiftCard";
 
 type Props = {
   events: EventsOutput["getEvents"];
@@ -14,12 +14,12 @@ const UpcomingShifts = ({ events }: Props) => {
   });
   if (upcomingShifts.length === 0) {
     return (
-      <div className="mt-4 w-full rounded-lg bg-white p-4 shadow">
+      <div className="mt-4 w-full rounded-lg bg-card border-card-foreground/35 border p-4 shadow">
         <h3 className="text-base">
           No upcoming shifts, go to{" "}
           <Link
             href={"/shifts?shifts=allShifts"}
-            className="font-semibold text-purple-900 underline"
+            className="font-semibold text-purple-900 dark:text-purple-600 underline"
           >
             shifts
           </Link>{" "}
