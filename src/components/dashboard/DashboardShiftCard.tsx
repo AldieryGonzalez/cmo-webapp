@@ -5,7 +5,6 @@ import {
   type Event,
 } from "~/lib/events/utils";
 import { Card, CardContent } from "../ui/card";
-import { getUser } from "~/lib/auth/utils";
 
 type ShiftCardProps = {
   event: Event;

@@ -1,7 +1,7 @@
-import { getUser } from "~/lib/auth/utils";
-import DashboardShiftCard from "./DashboardShiftCard";
-import { inEvent, type Event } from "~/lib/events/utils";
 import { isAfter } from "date-fns";
+import { getUser } from "~/lib/auth/utils";
+import { inEvent, type Event } from "~/lib/events/utils";
+import DashboardShiftCard from "./DashboardShiftCard";
 
 type Props = {
   events: Event[];
@@ -10,7 +10,6 @@ type Props = {
 const RecentShifts = async ({ events }: Props) => {
   const res = await getUser();
   if (!res) return null;
-  const { contact, ...user } = res;
 
   const recentShifts = events
     .filter((event) => {
