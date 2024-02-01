@@ -10,11 +10,11 @@ import {
 
 import { ShoppingCart } from "lucide-react";
 
-import Link from "next/link";
+import type { User } from "@clerk/nextjs/server";
 import Image from "next/image";
+import Link from "next/link";
 import NavLink from "./navLink";
 import SignOutMenuItem from "./signoutMenuItem";
-import type { User } from "@clerk/nextjs/server";
 
 type UserContentsProps = {
   user: User;
@@ -43,12 +43,12 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
         >
           Messages
         </NavLink>
-        <NavLink
+        {/* <NavLink
           href="/calendar"
           className="hidden text-base font-medium text-white md:block"
         >
           Calendar
-        </NavLink>
+        </NavLink> */}
         <NavLink
           href="/cart"
           className="hidden gap-0.5 rounded-full border-black border-opacity-10 bg-purple-900 text-base font-medium text-white md:flex md:items-center md:justify-center md:gap-0.5"
