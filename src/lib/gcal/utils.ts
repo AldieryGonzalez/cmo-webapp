@@ -1,4 +1,4 @@
-import { isAfter, isBefore, addYears, startOfDay, endOfDay } from "date-fns";
+import { addYears, endOfDay, isAfter, isBefore, startOfDay } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import type { EventsOutput } from "~/server/api/routers/events";
 import { longDateString } from "../events/utils";
@@ -63,6 +63,5 @@ export const getMonthMatrix = (date: Date = new Date()) => {
       return newDate;
     });
   });
-  console.table(daysMatrix);
   return daysMatrix;
 };

@@ -6,7 +6,6 @@ import ExportButton from "./_components/export";
 
 const Cart = async () => {
   const results = await api.events.getSavedShifts.query();
-  console.log(results);
   return (
     <div className="container space-y-4">
       <div className="flex justify-between">
