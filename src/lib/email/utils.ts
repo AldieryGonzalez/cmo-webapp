@@ -7,6 +7,26 @@ export const emailSchema = z.object({
 });
 
 export function parseGmailMessage(message: MessagesOutput["getEvents"][0]) {
+  const headers = message.payload?.headers;
+  if (!headers) {
+    return null;
+  }
+  const subject =
+    headers.find((header) => header.name === "Subject")?.value ?? "";
+  const from = headers.find((header) => header.name === "From")?.value ?? "";
+  const date = headers.find((header) => header.name === "Date")?.value ?? "";
+  const to = headers.find((header) => header.name === "To")?.value ?? "";
+  const text = extractPayloadParts(message);
+  return {
+    subject,
+    from,
+    date,
+    to,
+    payload: text,
+  };
+}
+
+export function extractPayloadParts(message: MessagesOutput["getEvents"][0]) {
   if (!message.payload) {
     return null;
   }
