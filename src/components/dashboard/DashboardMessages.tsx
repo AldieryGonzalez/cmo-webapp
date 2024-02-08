@@ -22,10 +22,10 @@ const formatDate = (date: string) => {
 const DashboardMessages = ({ messages }: Props) => {
   const [index, setIndex] = useState(0);
   return (
-    <section className="flex grow flex-col">
-      <h3 className="block text-xl font-normal">Announcements</h3>
-      <div className="relative grow overflow-y-auto rounded-md border border-card-foreground/35 bg-card shadow-sm shadow-primary/10">
-        <nav className="sticky left-0 right-0 top-0 flex h-7 justify-end gap-2 bg-zinc-400 px-6 py-0.5">
+    <section className="flex max-h-full grow flex-col">
+      <h3 className="grow-[2] text-xl font-normal">Announcements</h3>
+      <div className="flex grow flex-col overflow-y-auto rounded-md border border-card-foreground/35 bg-card shadow-sm shadow-primary/10">
+        <nav className="flex h-7 grow-[2] justify-end gap-2 bg-zinc-400 px-6 py-0.5">
           <p>{`${index + 1} of ${messages.length}`}</p>
           <button
             onClick={() =>
@@ -42,17 +42,19 @@ const DashboardMessages = ({ messages }: Props) => {
             <ChevronRight />
           </button>
         </nav>
-        <div className="flex flex-col p-3">
-          <p className="text-lg font-semibold">{messages[index]?.subject}</p>
-          <p className="text-sm font-normal">{messages[index]?.from}</p>
-          <p className="text-sm font-normal">To: {messages[index]?.to}</p>
-          <p className="text-sm font-normal">{`Sent: ${formatDate(
-            messages[index]?.date ?? "0",
-          )}`}</p>
-          {/* <p className="text-sm font-normal">{`Sent: ${formatDate(date)}`}</p> */}
-          <pre className="whitespace-pre-wrap text-sm font-normal">
-            {messages[index]?.payload ?? "No message"}
-          </pre>
+        <div className="grow overflow-y-auto">
+          <div className="flex max-h-full flex-col overflow-auto p-3">
+            <p className="text-lg font-semibold">{messages[index]?.subject}</p>
+            <p className="text-sm font-normal">{messages[index]?.from}</p>
+            <p className="text-sm font-normal">To: {messages[index]?.to}</p>
+            <p className="text-sm font-normal">{`Sent: ${formatDate(
+              messages[index]?.date ?? "0",
+            )}`}</p>
+            {/* <p className="text-sm font-normal">{`Sent: ${formatDate(date)}`}</p> */}
+            <pre className="whitespace-pre-wrap text-sm font-normal">
+              {messages[index]?.payload ?? "No message"}
+            </pre>
+          </div>
         </div>
       </div>
     </section>

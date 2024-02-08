@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.1",
+    "@clerk/themes": "^1.7.9",
     "@googleapis/calendar": "^9.5.0",
     "@googleapis/gmail": "^7.0.0",
     "@hookform/resolvers": "^3.3.4",
