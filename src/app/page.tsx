@@ -16,13 +16,12 @@ export default async function Home() {
   });
 
   return (
-    <div className="row-span-1 grid h-full grid-cols-1 grid-rows-[max-content_max-content_1fr] px-8 pt-3">
-      <div className="">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+    <div className="flex max-h-full flex-col px-8 pt-3">
+      <div className="grow-[2]">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <UpcomingShifts events={events} />
       </div>
-
-      <UpcomingShifts events={events} />
-      <div className="flex gap-4 overflow-hidden p-2">
+      <div className="flex grow gap-4 overflow-y-auto p-2">
         <DashboardMessages messages={messages} />
         <RecentShifts events={events} />
       </div>
