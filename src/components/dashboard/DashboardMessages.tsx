@@ -1,62 +1,58 @@
+"use client";
 import { format, formatDistanceToNow } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
-const formatDate = (date: Date) => {
+type Props = {
+  messages: ({
+    subject: string;
+    from: string;
+    date: string;
+    to: string;
+    payload: string | null;
+  } | null)[];
+};
+
+const formatDate = (date: string) => {
   const formattedDate = format(date, "MMM d, yyyy, h:mm a");
   const hoursAgo = formatDistanceToNow(date, { addSuffix: true });
   return `${formattedDate} (${hoursAgo})`;
 };
 
-const text = `\tLorem ipsum dolor sit amet consectetur adipisicing elit. 
-\tAlias voluptates et voluptatibus veniam, ad, deleniti qui suscipit ullam pariatur impedit quod ipsa dignissimos, ducimus officiis. 
-\tConsequuntur delectus, officia unde numquam sunt fugiat consectetur blanditiis a tempora quasi quidem earum illum repellat accusantium et debitis reiciendis architecto atque aut sapiente corporis. 
-\tAnimi optio debitis nostrum numquam commodi tempora incidunt deleniti quas adipisci! Beatae culpa tempora provident sequi alias quisquam, porro nesciunt dolorem dolor in delectus maxime consequatur aliquam deleniti rem? 
-\tLabore voluptates numquam omnis, eum eaque corporis mollitia consectetur eius sequi atque reiciendis nam dicta perferendis accusantium natus maxime, aperiam explicabo modi ducimus est fugiat?
-\tRem vitae temporibus vero quae blanditiis eum ducimu eius. 
-\tIncidunt animi ex officiis perspiciatis repellat sequi dicta soluta veniam, recusandae numquam quis a nisi architecto distinctio nemo ducimus nobis. 
-\tRem vitae temporibus vero quae blanditiis eum ducimu eius. 
-\tIncidunt animi ex officiis perspiciatis repellat sequi dicta soluta veniam, recusandae numquam quis a nisi architecto distinctio nemo ducimus nobis. 
-\tRem vitae temporibus vero quae blanditiis eum ducimu eius. 
-\tIncidunt animi ex officiis perspiciatis repellat sequi dicta soluta veniam, recusandae numquam quis a nisi architecto distinctio nemo ducimus nobis. 
-\tRem vitae temporibus vero quae blanditiis eum ducimu eius. 
-\tIncidunt animi ex officiis perspiciatis repellat sequi dicta soluta veniam, recusandae numquam quis a nisi architecto distinctio nemo ducimus nobis. 
-\tObcaecati quam quae recusandae vitae animi expedita ullam facilis, quis corrupti accusamus delectus amet quisquam pariatur laborum ipsum dolorem harum nostrum. 
-\tRepudiandae iure quia dolore incidunt, laborum numquam quasi magni, dicta sequi sapiente iste nobis ex labore nostrum at exercitationem veritatis est corrupti blanditiis omnis? 
-\tObcaecati quam quae recusandae vitae animi expedita ullam facilis, quis corrupti accusamus delectus amet quisquam pariatur laborum ipsum dolorem harum nostrum. 
-\tRepudiandae iure quia dolore incidunt, laborum numquam quasi magni, dicta sequi sapiente iste nobis ex labore nostrum at exercitationem veritatis est corrupti blanditiis omnis? 
-\tObcaecati quam quae recusandae vitae animi expedita ullam facilis, quis corrupti accusamus delectus amet quisquam pariatur laborum ipsum dolorem harum nostrum. 
-\tRepudiandae iure quia dolore incidunt, laborum numquam quasi magni, dicta sequi sapiente iste nobis ex labore nostrum at exercitationem veritatis est corrupti blanditiis omnis? 
-
-
-
-\tObcaecati quam quae recusandae vitae animi expedita ullam facilis, quis corrupti accusamus delectus amet quisquam pariatur laborum ipsum dolorem harum nostrum. 
-\tRepudiandae iure quia dolore incidunt, laborum numquam quasi magni, dicta sequi sapiente iste nobis ex labore nostrum at exercitationem veritatis est corrupti blanditiis omnis? 
-\tVoluptatem, consequuntur molestias obcaecati autem rem eum magnam id quam. Voluptas tempora commodi voluptatum qui ab dolorum nostrum laboriosam quo odit architecto?`;
-
-const date = new Date(2023, 9, 31, 9, 28); // Oct 31, 2023, 9:28 AM
-
-const DashboardMessages = () => {
-  const page = 1;
-  const totalPages = 5;
+const DashboardMessages = ({ messages }: Props) => {
+  const [index, setIndex] = useState(0);
   return (
     <section className="flex grow flex-col">
       <h3 className="block text-xl font-normal">Announcements</h3>
-      <div className="relative grow overflow-y-auto rounded-md bg-card border-card-foreground/35 border shadow-sm shadow-primary/10">
+      <div className="relative grow overflow-y-auto rounded-md border border-card-foreground/35 bg-card shadow-sm shadow-primary/10">
         <nav className="sticky left-0 right-0 top-0 flex h-7 justify-end gap-2 bg-zinc-400 px-6 py-0.5">
-          <p>{`${page} of ${totalPages}`}</p>
-          <button>
+          <p>{`${index + 1} of ${messages.length}`}</p>
+          <button
+            onClick={() =>
+              setIndex((prev) =>
+                prev - 1 < 0 ? messages.length - 1 : prev - 1,
+              )
+            }
+          >
             <ChevronLeft />
           </button>
-          <button>
+          <button
+            onClick={() => setIndex((prev) => (prev + 1) % messages.length)}
+          >
             <ChevronRight />
           </button>
         </nav>
         <div className="flex flex-col p-3">
-          <p className="text-lg font-semibold">New Feature</p>
-          <p className="text-sm font-normal">Bill Millgram</p>
-          <p className="text-sm font-normal">To: Everyone</p>
-          <p className="text-sm font-normal">{`Sent: ${formatDate(date)}`}</p>
-          <pre className="whitespace-pre-wrap text-sm font-normal">{text}</pre>
+          <p className="text-lg font-semibold">{messages[index]?.subject}</p>
+          <p className="text-sm font-normal">{messages[index]?.from}</p>
+          <p className="text-sm font-normal">To: {messages[index]?.to}</p>
+          <p className="text-sm font-normal">{`Sent: ${formatDate(
+            messages[index]?.date ?? "0",
+          )}`}</p>
+          {/* <p className="text-sm font-normal">{`Sent: ${formatDate(date)}`}</p> */}
+          <pre className="whitespace-pre-wrap text-sm font-normal">
+            {messages[index]?.payload ?? "No message"}
+          </pre>
         </div>
       </div>
     </section>
