@@ -1,8 +1,9 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -25,7 +26,6 @@ import { hasPast, stringify } from "~/lib/events/utils";
 import { cn } from "~/lib/utils";
 import type { Event } from "~/server/api/routers/events";
 import { api } from "~/trpc/react";
-import { toast } from "sonner";
 
 type SaveShiftButtonProps = {
   event: Event;
@@ -83,7 +83,6 @@ const SaveForm = ({ event }: { event: Event }) => {
     //removing id so cart event generates new id
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...shift } = findshift;
-    console.log(shift);
     const res = saveShift.mutateAsync(shift);
     toast.promise(res, {
       loading: "Loading...",

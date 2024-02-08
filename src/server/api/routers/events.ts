@@ -208,7 +208,6 @@ export const eventRouter = createTRPCRouter({
       .from(syncs)
       .orderBy(desc(syncs.lastSynced))
       .limit(1);
-    console.log(res);
     if (!res) {
       throw new TRPCError({
         message: "FAILED TO GET LAST SYNC DATE",
