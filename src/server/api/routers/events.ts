@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
 
@@ -277,6 +277,21 @@ export const eventRouter = createTRPCRouter({
       .orderBy(asc(savedShifts.start));
     return shifts;
   }),
+
+  deleteSavedShifts: protectedProcedure
+    .input(z.array(z.string()))
+    .mutation(async ({ ctx, input }) => {
+      for (const id of input) {
+        await ctx.db
+          .delete(savedShifts)
+          .where(
+            and(
+              eq(savedShifts.userId, ctx.auth.user.id),
+              eq(savedShifts.id, id),
+            ),
+          );
+      }
+    }),
 });
 export type EventRouter = typeof eventRouter;
 export type EventsOutput = inferRouterOutputs<EventRouter>;

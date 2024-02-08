@@ -21,7 +21,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({ results }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant={"nu"}>
+        <Button variant={"nu"} disabled={results.length == 0}>
           <span>Save Shifts</span>
         </Button>
       </DialogTrigger>
