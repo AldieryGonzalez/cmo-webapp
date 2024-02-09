@@ -11,16 +11,16 @@ export function getFilledShifts(event: Event) {
   return event.shifts.filter((shift) => shift.isFilled);
 }
 
-export function inEvent(event: Event, employeeName: string) {
+export function inEvent(event: Event, employeeNames: string[]) {
   for (const shift of event.shifts) {
-    if (shift.filledBy == employeeName) return true;
+    if (employeeNames.some((name) => name == shift.filledBy)) return true;
   }
   return false;
 }
 
-export function roleInEvent(event: Event, employeeName: string) {
+export function roleInEvent(event: Event, employeeNames: string[]) {
   for (const shift of event.shifts) {
-    if (shift.filledBy == employeeName) return shift.role;
+    if (employeeNames.some((name) => name == shift.filledBy)) return shift.role;
   }
   return false;
 }
@@ -28,10 +28,10 @@ export function roleInEvent(event: Event, employeeName: string) {
 export function isSearched(
   event: Event,
   searchParam: NextUrlSearchParams,
-  employeeName = "",
+  employeeNames = [""],
 ) {
   return (
-    hasSearchTerm(event, searchParam.search ?? null, employeeName) &&
+    hasSearchTerm(event, searchParam.search ?? null, employeeNames) &&
     hasLocationSearchTerm(event, searchParam.location ?? null)
   );
 }
@@ -39,10 +39,10 @@ export function isSearched(
 export function hasSearchTerm(
   event: Event,
   searchTerm: string | null,
-  employeeName = "",
+  employeeNames = [""],
 ) {
   if (searchTerm == null) return true;
-  const role = roleInEvent(event, employeeName);
+  const role = roleInEvent(event, employeeNames);
   if (event.title?.toLowerCase().includes(searchTerm.toLowerCase()))
     return true;
   if (event.location?.toLowerCase().includes(searchTerm.toLowerCase()))
