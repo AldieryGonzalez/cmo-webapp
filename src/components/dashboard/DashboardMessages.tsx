@@ -23,9 +23,9 @@ const DashboardMessages = ({ messages }: Props) => {
     const [index, setIndex] = useState(0);
     return (
         <section className="flex max-h-full grow flex-col">
-            <h3 className="h-12 text-xl font-normal">Announcements</h3>
+            <h3 className="text-xl font-normal">Announcements</h3>
             <div className="flex grow flex-col overflow-y-auto rounded-md border border-card-foreground/35 bg-card shadow-sm shadow-primary/10">
-                <nav className="flex h-7 justify-end gap-2 bg-zinc-400 px-6 py-0.5">
+                <nav className="flex justify-end gap-2 bg-zinc-400 px-6 py-0.5">
                     <p>{`${index + 1} of ${messages.length}`}</p>
                     <button
                         onClick={() =>
