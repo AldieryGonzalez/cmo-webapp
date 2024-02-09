@@ -1,3 +1,4 @@
+import type { User } from "@clerk/nextjs/server";
 import Link from "next/link";
 import {
   longTimeRangeString,
@@ -8,9 +9,16 @@ import { Card, CardContent } from "../ui/card";
 
 type ShiftCardProps = {
   event: Event;
+  user: namedUser;
 };
+interface namedUser extends User {
+  searchNames: string[];
+}
 
-const DashboardShiftCard: React.FC<ShiftCardProps> = async ({ event }) => {
+const DashboardShiftCard: React.FC<ShiftCardProps> = async ({
+  event,
+  user,
+}) => {
   return (
     <Card
       className="relative inline-flex h-28 w-72 snap-start items-start justify-start gap-4 rounded-lg border border-purple-900/10
@@ -19,7 +27,7 @@ const DashboardShiftCard: React.FC<ShiftCardProps> = async ({ event }) => {
       <CardContent className="pl-1">
         <div className="inline-flex flex-col items-start justify-start gap-1 pr-10">
           <div className="w-[200px] text-sm font-semibold leading-tight text-slate-900">
-            {roleInEvent(event, "Aldi G.")}
+            {roleInEvent(event, user.searchNames)}
           </div>
           <div className="w-[200px] text-[11px] font-normal leading-tight text-slate-900">
             {event.title}
