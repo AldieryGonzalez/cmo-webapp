@@ -10,7 +10,7 @@ export default async function Home() {
         start: subMonths(new Date(), 12),
         end: addMonths(new Date(), 1),
     });
-    const messages = await api.messages.getEvents.query();
+    const messages = await api.messages.getAnnouncements.query();
     const user = await getUser();
     if (!user) return null;
 

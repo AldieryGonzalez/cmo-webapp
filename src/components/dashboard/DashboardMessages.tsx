@@ -5,7 +5,7 @@ import { useState } from "react";
 import { type MessagesOutput } from "~/server/api/routers/messages";
 
 type Props = {
-    messages: MessagesOutput["getEvents"];
+    messages: MessagesOutput["getAnnouncements"];
 };
 
 const formatDate = (date: Date) => {

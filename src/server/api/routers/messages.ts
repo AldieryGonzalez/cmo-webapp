@@ -7,7 +7,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedGapiProcedure } from "~/server/api/trpc";
 
 export const messageRouter = createTRPCRouter({
-    getEvents: protectedGapiProcedure
+    getAnnouncements: protectedGapiProcedure
         .input(
             z
                 .object({
@@ -81,6 +81,7 @@ export const messageRouter = createTRPCRouter({
                         const purify = DOMPurify(window);
                         const html = purify.sanitize(
                             message.html || "No Message",
+                            { FORBID_TAGS: ["style"] },
                         );
                         return {
                             id: message.messageId,
@@ -103,7 +104,6 @@ export const messageRouter = createTRPCRouter({
                         cause: error,
                     });
                 });
-            console.log(messages[8]);
             return messages;
         }),
 });

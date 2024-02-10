@@ -1,7 +1,7 @@
 import { api } from "~/trpc/server";
 
 const Messages = async () => {
-    const messages = await api.messages.getEvents.query();
+    const messages = await api.messages.getAnnouncements.query();
 
     return (
         <div className="whitespace-pre-wrap">
