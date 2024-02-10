@@ -1,9 +1,7 @@
 import { addMonths } from "date-fns";
 import { api } from "~/trpc/server";
 
-type TesterProps = {};
-
-const Tester = async ({ ...props }: TesterProps) => {
+const Tester = async () => {
     const freeBusy = await api.events.freeBusy.query({
         start: new Date(),
         end: addMonths(new Date(), 6),
