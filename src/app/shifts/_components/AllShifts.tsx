@@ -1,4 +1,5 @@
 import { TabsContent } from "@radix-ui/react-tabs";
+import { CalendarX2 } from "lucide-react";
 import Link from "next/link";
 import {
     Card,
@@ -6,6 +7,11 @@ import {
     CardHeader,
     CardTitle,
 } from "~/components/ui/card";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "~/components/ui/popover";
 import { timeRangeString } from "~/lib/events/utils";
 import { groupEventsByDay, type CheckedEvent } from "~/lib/gcal/utils";
 
@@ -35,7 +41,7 @@ const DaySection: React.FC<DaySectionProps> = ({ day, events }) => {
 
 const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
     return (
-        <Card className="transition-all hover:scale-x-[1.001] hover:scale-y-[1.005] hover:shadow-lg">
+        <Card className="relative transition-all hover:scale-x-[1.001] hover:scale-y-[1.005] hover:shadow-lg">
             <Link href={`/shifts/${event.id}`} className="block h-full w-full">
                 <CardHeader className="space-y-0 px-4 py-2.5">
                     {!event.cancelled ? (
@@ -52,6 +58,28 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event }) => {
                     </CardDescription>
                 </CardHeader>
             </Link>
+            {event.busyCalendars.length > 0 && (
+                <Popover>
+                    <PopoverTrigger className="absolute bottom-0 right-0 top-0 rounded-r-md bg-orange-400/20 px-3 hover:bg-orange-400/30">
+                        <CalendarX2 />
+                    </PopoverTrigger>
+                    <PopoverContent collisionPadding={20}>
+                        <p className="text-sm font-bold text-muted-foreground">
+                            Conflicts in the following calendars:
+                        </p>
+                        <ul className="ml-4 list-disc space-y-1">
+                            {event.busyCalendars.map((calendar) => (
+                                <li
+                                    key={calendar}
+                                    className="text-xs text-muted-foreground"
+                                >
+                                    {calendar}
+                                </li>
+                            ))}
+                        </ul>
+                    </PopoverContent>
+                </Popover>
+            )}
         </Card>
     );
 };
