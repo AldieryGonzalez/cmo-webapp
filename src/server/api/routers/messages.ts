@@ -1,4 +1,6 @@
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
 import { simpleParser } from "mailparser";
 import { z } from "zod";
 
@@ -67,17 +69,29 @@ export const messageRouter = createTRPCRouter({
                         const attatchments = message.attachments || [];
                         const to = Array.isArray(message.to)
                             ? message.to.map(
-                                  (to) => to.value[0]?.address ?? "Unknown",
+                                  (to) =>
+                                      to.value[0]?.address?.toLocaleLowerCase() ??
+                                      "Unknown",
                               )
-                            : [message.to?.value[0]?.address ?? "Unknown"];
+                            : [
+                                  message.to?.value[0]?.address?.toLocaleLowerCase() ??
+                                      "Unknown",
+                              ];
+                        const window = new JSDOM("").window;
+                        const purify = DOMPurify(window);
+                        const html = purify.sanitize(
+                            message.html || "No Message",
+                        );
                         return {
                             id: message.messageId,
-                            from: message.from?.value[0]?.address ?? "Unknown",
+                            from:
+                                message.from?.value[0]?.address?.toLocaleLowerCase() ??
+                                "Unknown",
                             to: to,
                             subject: message.subject,
                             date: message.date,
                             text: message.text,
-                            html: message.html,
+                            html: html,
                             attatchments: attatchments,
                         };
                     });
@@ -89,6 +103,7 @@ export const messageRouter = createTRPCRouter({
                         cause: error,
                     });
                 });
+            console.log(messages[8]);
             return messages;
         }),
 });
