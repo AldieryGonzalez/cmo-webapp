@@ -10,22 +10,22 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 // import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
-import { env } from "~/env";
 import { ZodError } from "zod";
+import { env } from "~/env";
 
 import { db } from "~/server/db";
 
 import {
-  calendar as CalendarClient,
-  type calendar_v3,
+    calendar as CalendarClient,
+    type calendar_v3,
 } from "@googleapis/calendar";
 import { gmail as GmailClient, type gmail_v1 } from "@googleapis/gmail";
 
 import {
-  type SignedInAuthObject,
-  type SignedOutAuthObject,
-  auth as getAuth,
-  clerkClient,
+    clerkClient,
+    auth as getAuth,
+    type SignedInAuthObject,
+    type SignedOutAuthObject,
 } from "@clerk/nextjs/server";
 
 /**
@@ -42,30 +42,30 @@ import {
  */
 
 interface AuthContext {
-  auth: SignedInAuthObject | SignedOutAuthObject;
+    auth: SignedInAuthObject | SignedOutAuthObject;
 }
 
 export const createContextInner = async ({ auth }: AuthContext) => {
-  const calendar: calendar_v3.Calendar | null = null;
-  const gmail: gmail_v1.Gmail | null = null;
+    const calendar: calendar_v3.Calendar | null = null;
+    const gmail: gmail_v1.Gmail | null = null;
 
-  const session = await clerkClient.sessions.getSession(auth.sessionId ?? "");
-  const user = await clerkClient.users.getUser(auth.userId ?? "");
+    const session = await clerkClient.sessions.getSession(auth.sessionId ?? "");
+    const user = await clerkClient.users.getUser(auth.userId ?? "");
 
-  return {
-    auth: { session, user },
-    db,
-    calendar,
-    gmail,
-  };
+    return {
+        auth: { session, user },
+        db,
+        calendar,
+        gmail,
+    };
 };
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const innerContext = await createContextInner({ auth: getAuth() });
+    const innerContext = await createContextInner({ auth: getAuth() });
 
-  return {
-    ...innerContext,
-    ...opts,
-  };
+    return {
+        ...innerContext,
+        ...opts,
+    };
 };
 
 /**
@@ -76,17 +76,19 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * errors on the backend.
  */
 const t = initTRPC.context<typeof createTRPCContext>().create({
-  transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    };
-  },
+    transformer: superjson,
+    errorFormatter({ shape, error }) {
+        return {
+            ...shape,
+            data: {
+                ...shape.data,
+                zodError:
+                    error.cause instanceof ZodError
+                        ? error.cause.flatten()
+                        : null,
+            },
+        };
+    },
 });
 
 /**
@@ -114,53 +116,61 @@ export const publicProcedure = t.procedure;
 
 /** Reusable middleware that enforces users are logged in before running the procedure. */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.auth.session || !ctx.auth.user) {
-    throw new TRPCError({
-      message: "NO SESSION/USER FOUND",
-      code: "UNAUTHORIZED",
+    if (!ctx.auth.session || !ctx.auth.user) {
+        throw new TRPCError({
+            message: "NO SESSION/USER FOUND",
+            code: "UNAUTHORIZED",
+        });
+    }
+    return next({
+        ctx: {
+            // infers the `session` as non-nullable
+            auth: {
+                ...ctx.auth,
+                session: ctx.auth.session,
+                user: ctx.auth.user,
+            },
+        },
     });
-  }
-  return next({
-    ctx: {
-      // infers the `session` as non-nullable
-      auth: { ...ctx.auth, session: ctx.auth.session, user: ctx.auth.user },
-    },
-  });
 });
 
 /** Reusable middleware for piping a api clients to trpc procedures */
 const googleApiMiddleware = t.middleware(async ({ ctx, next }) => {
-  if (!ctx.auth.session || !ctx.auth.user) {
-    throw new TRPCError({
-      message: "NO SESSION/USER FOUND",
-      code: "UNAUTHORIZED",
-    });
-  }
-  const [OauthAccessToken] = await clerkClient.users.getUserOauthAccessToken(
-    ctx.auth.user.id,
-    "oauth_google",
-  );
+    if (!ctx.auth.session || !ctx.auth.user) {
+        throw new TRPCError({
+            message: "NO SESSION/USER FOUND",
+            code: "UNAUTHORIZED",
+        });
+    }
+    const [OauthAccessToken] = await clerkClient.users.getUserOauthAccessToken(
+        ctx.auth.user.id,
+        "oauth_google",
+    );
 
-  const { token } = OauthAccessToken!;
-  const calendar = CalendarClient({
-    version: "v3",
-    headers: { Authorization: `Bearer ${token}` },
-    params: {
-      calendarId: env.GOOGLE_CALENDAR_ID,
-      order: "startTime",
-    },
-  });
-  const gmail = GmailClient({
-    version: "v1",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return next({
-    ctx: {
-      auth: { ...ctx.auth, session: ctx.auth.session, user: ctx.auth.user },
-      calendar,
-      gmail,
-    },
-  });
+    const { token } = OauthAccessToken!;
+    const calendar = CalendarClient({
+        version: "v3",
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+            calendarId: env.GOOGLE_CALENDAR_ID,
+            order: "startTime",
+        },
+    });
+    const gmail = GmailClient({
+        version: "v1",
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return next({
+        ctx: {
+            auth: {
+                ...ctx.auth,
+                session: ctx.auth.session,
+                user: ctx.auth.user,
+            },
+            calendar,
+            gmail,
+        },
+    });
 });
 
 /**
