@@ -7,10 +7,10 @@ import AllShifts from "~/app/shifts/_components/AllShifts";
 import MyShifts from "~/app/shifts/_components/MyShifts";
 import OpenShifts from "~/app/shifts/_components/OpenShifts";
 import SearchBar from "~/app/shifts/_components/SearchBar";
-import { type Event } from "~/lib/events/utils";
+import { type CheckedEvent } from "~/lib/gcal/utils";
 
 type TabContainerProps = {
-    events: Event[];
+    events: CheckedEvent[];
     searchParams: Record<string, string | undefined>;
     searchNames: string[];
 };
