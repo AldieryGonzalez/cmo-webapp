@@ -1,25 +1,23 @@
-import { parseGmailMessage } from "~/lib/email/utils";
 import { api } from "~/trpc/server";
 
 const Messages = async () => {
-  const gmailResponses = await api.messages.getEvents.query();
-  const messages = gmailResponses.map((message) => {
-    return parseGmailMessage(message);
-  });
+    const messages = await api.messages.getEvents.query();
 
-  return (
-    <div className="whitespace-pre-wrap">
-      Messages
-      {"\n"}
-      {messages.map((message, index) => {
-        return (
-          <div key={index} className="rounded-lg border p-4">
-            {message?.payload}
-          </div>
-        );
-      })}
-    </div>
-  );
+    return (
+        <div className="whitespace-pre-wrap">
+            Messages
+            {"\n"}
+            {messages.map((message, index) => {
+                return (
+                    <div
+                        key={index}
+                        className="rounded-lg border p-4"
+                        dangerouslySetInnerHTML={{ __html: message.html }}
+                    />
+                );
+            })}
+        </div>
+    );
 };
 
 export default Messages;
