@@ -26,16 +26,4 @@ export default async function Home() {
             </div>
         </div>
     );
-    return (
-        <div className="flex max-h-full flex-col px-8 pt-3">
-            <div className="grow-[2]">
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <UpcomingShifts events={events} user={user} />
-            </div>
-            <div className="flex grow gap-4 overflow-y-auto p-2">
-                <DashboardMessages messages={messages} />
-                <RecentShifts events={events} user={user} />
-            </div>
-        </div>
-    );
 }
