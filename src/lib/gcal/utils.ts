@@ -12,7 +12,7 @@ import { longDateString } from "../events/utils";
 
 type CmoEvent = EventsOutput["getEvent"];
 type FreeBusy = EventsOutput["freeBusy"];
-type EventByDayObj = Record<string, CmoEvent[]>;
+type EventByDayObj = Record<string, CheckedEvent[]>;
 type NextUrlSearchParams = Record<string, string | undefined>;
 
 const isBetween = (eventDate: Date, start: Date, end: Date) => {
@@ -38,7 +38,7 @@ export const getDateRangeFromSearchParams = (
     } as DateRange | undefined;
 };
 
-export function groupEventsByDay(events: CmoEvent[]) {
+export function groupEventsByDay(events: CheckedEvent[]) {
     const eventsByDay: EventByDayObj = {};
 
     for (const event of events) {
@@ -74,12 +74,15 @@ export const getMonthMatrix = (date: Date = new Date()) => {
     return daysMatrix;
 };
 
-// export const checkFreeBusy = (events: CmoEvent[], freeBusy: FreeBusy) => {
-
-//   return events.map((event) => {
-//     const isBusy =
-//   });
-// }
+export const checkFreeBusy = (events: CmoEvent[], freeBusy: FreeBusy) => {
+    const busyEvents = [];
+    for (const event of events) {
+        const busyCalendars = checkEventFreeBusy(event, freeBusy);
+        busyEvents.push({ ...event, busyCalendars });
+    }
+    return busyEvents;
+};
+export type CheckedEvent = ReturnType<typeof checkFreeBusy>[number];
 
 export const checkEventFreeBusy = (event: CmoEvent, freeBusy: FreeBusy) => {
     const busyCalendars = [];
