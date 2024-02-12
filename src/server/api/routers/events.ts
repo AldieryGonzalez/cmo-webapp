@@ -76,14 +76,14 @@ export const eventRouter = createTRPCRouter({
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { openShifts, filledShifts, allShifts, ...newEvent } =
                     new CmoEvent(event);
-                const newAllShifts = allShifts.map((shift) => {
+                const shifts = allShifts.map((shift) => {
                     return {
                         ...shift,
                         isFilled: shift.filledBy !== null,
                     };
                 });
 
-                return { ...newEvent, shifts: newAllShifts };
+                return { ...newEvent, shifts: shifts };
             });
             return res;
         }),
@@ -92,6 +92,7 @@ export const eventRouter = createTRPCRouter({
         .query(async ({ ctx, input }) => {
             const { data: gcalEvent } = await ctx.calendar.events.get({
                 eventId: input,
+                timeZone: "(GMT-06:00) Central Time - Chicago",
             });
             if (!gcalEvent) {
                 throw new TRPCError({
@@ -102,13 +103,6 @@ export const eventRouter = createTRPCRouter({
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { openShifts, filledShifts, allShifts, ...newEvent } =
                 new CmoEvent(gcalEvent);
-            const calendars = await ctx.calendar.calendarList.list();
-            if (!calendars.data.items) {
-                throw new TRPCError({
-                    message: "FAILED TO GET GCAL CALENDARS",
-                    code: "INTERNAL_SERVER_ERROR",
-                });
-            }
             const shifts = allShifts.map((shift) => {
                 return {
                     ...shift,
