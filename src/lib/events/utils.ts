@@ -95,13 +95,13 @@ export function hasPast(event: Event) {
 }
 
 export function longDateString(event: Event) {
-    return dateFormat(event.start, "PPPP");
+    return dateFormat(event.start, "PPPP O");
 }
 export function startTimeString(event: Event) {
     return dateFormat(event.start, "p");
 }
 export function endTimeString(event: Event) {
-    return dateFormat(event.end, "p");
+    return dateFormat(event.end, "p O");
 }
 export function timeRangeString(event: Event) {
     return `${startTimeString(event)} - ${endTimeString(event)}`;
