@@ -111,15 +111,12 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
               </DropdownMenuItem> */}
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        {/* <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator /> */}
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem asChild>
+                                <Link href="/profile">Profile</Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
                         <SignOutMenuItem>Log out</SignOutMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

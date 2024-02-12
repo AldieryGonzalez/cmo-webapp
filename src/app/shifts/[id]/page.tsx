@@ -122,6 +122,9 @@ const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
 
                     <SaveShiftButton event={event} />
                 </div>
+                {/* <div className="whitespace-pre-wrap">
+                    {JSON.stringify(event, undefined, 4)}
+                </div> */}
                 <div className="flex flex-col text-sm text-muted-foreground sm:flex-row">
                     <p>{longTimeRangeString(event)}</p>
                     <p>{`@${event.location}`}</p>

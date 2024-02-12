@@ -2,6 +2,7 @@
 
 import { UserProfile } from "@clerk/nextjs";
 import { Settings2Icon } from "lucide-react";
+import Settings from "~/components/profile/Settings";
 
 const UserProfilePage = () => (
     <div className="min-h-full bg-purple-900">
@@ -12,7 +13,7 @@ const UserProfilePage = () => (
                     url="settings"
                     labelIcon={<Settings2Icon />}
                 >
-                    Settings
+                    <Settings />
                 </UserProfile.Page>
 
                 <UserProfile.Page label="account" />

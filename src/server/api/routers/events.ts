@@ -12,7 +12,7 @@ import {
     protectedGapiProcedure,
     protectedProcedure,
 } from "~/server/api/trpc";
-import { events, savedShifts, shifts, syncs } from "~/server/db/schema";
+import { events, savedShifts, shifts, syncs, users } from "~/server/db/schema";
 
 const InputShift = z.object({
     isFilled: z.boolean(),
@@ -365,6 +365,32 @@ export const eventRouter = createTRPCRouter({
                 {} as Record<string, FreeBusyCalendar>,
             );
             return busy;
+        }),
+    getCalendarList: protectedGapiProcedure.query(async ({ ctx }) => {
+        const { data } = await ctx.calendar.calendarList.list();
+        if (!data.items) {
+            throw new TRPCError({
+                message: "FAILED TO GET GCAL CALENDARS",
+                code: "INTERNAL_SERVER_ERROR",
+            });
+        }
+        return data.items;
+    }),
+    getSavedCalendars: protectedProcedure.query(async ({ ctx }) => {
+        const calendars = await ctx.db
+            .select({ calendars: users.calendars })
+            .from(users)
+            .where(eq(users.id, ctx.auth.user.id))
+            .limit(1);
+        return calendars;
+    }),
+    saveCalendars: protectedProcedure
+        .input(z.array(z.string()))
+        .mutation(async ({ ctx, input }) => {
+            await ctx.db
+                .update(users)
+                .set({ calendars: input.join(",") })
+                .where(eq(users.id, ctx.auth.user.id));
         }),
 });
 export type EventRouter = typeof eventRouter;
