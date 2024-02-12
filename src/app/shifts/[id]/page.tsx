@@ -7,9 +7,9 @@ import {
 } from "~/components/ui/popover";
 
 import { getUser } from "~/lib/auth/utils";
-import { longTimeRangeString } from "~/lib/events/utils";
 import { checkEventFreeBusy } from "~/lib/gcal/utils";
 import { api } from "~/trpc/server";
+import Details from "./_components/EventDetails";
 import SaveShiftButton from "./_components/SaveShiftButton";
 import ShiftButton from "./_components/ShiftButton";
 
@@ -37,10 +37,7 @@ const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
 
                     <SaveShiftButton event={event} />
                 </div>
-                <div className="flex flex-col text-sm text-muted-foreground sm:flex-row">
-                    <p>{longTimeRangeString(event)}</p>
-                    <p>{`@${event.location}`}</p>
-                </div>
+                <Details event={event} />
                 <SaveShiftButton event={event} mobile />
                 <div>
                     <div className="mb-2 flex justify-between text-lg font-medium">
