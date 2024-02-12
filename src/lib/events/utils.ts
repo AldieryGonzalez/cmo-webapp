@@ -95,13 +95,13 @@ export function hasPast(event: Event) {
 }
 
 export function longDateString(event: Event) {
-    return dateFormat(event.start, "PPPP O");
+    return dateFormat(event.start, "PPPP");
 }
 export function startTimeString(event: Event) {
     return dateFormat(event.start, "p");
 }
 export function endTimeString(event: Event) {
-    return dateFormat(event.end, "p O");
+    return dateFormat(event.end, "p");
 }
 export function timeRangeString(event: Event) {
     return `${startTimeString(event)} - ${endTimeString(event)}`;
@@ -135,5 +135,5 @@ export function isUnfilled(shift: Shift) {
 export function stringify(shift: Shift) {
     return `${shift.isFilled ? shift.filledBy : "open"} (${
         shift.role
-    }): ${dateFormat(shift.start, "p O")}-${dateFormat(shift.end, "p O")}`;
+    }): ${dateFormat(shift.start, "p")}-${dateFormat(shift.end, "p")}`;
 }
