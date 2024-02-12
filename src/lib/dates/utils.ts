@@ -12,13 +12,18 @@ export function timeStringToDate(date: Date, timeString: string): Date {
         if (locale === "pm") {
             hours = (parseInt(hours ?? defaultHour.toString()) + 12).toString();
         }
-        return new Date(
-            chicagoDate.getFullYear(),
-            chicagoDate.getMonth(),
-            chicagoDate.getDate(),
-            parseInt(hours ?? defaultHour.toString()),
-            parseInt(minutes ?? defaultMinute.toString()),
-        );
+        chicagoDate.setHours(parseInt(hours ?? defaultHour.toString()));
+        chicagoDate.setMinutes(parseInt(minutes ?? defaultMinute.toString()));
+        const formattedDate = new Intl.DateTimeFormat("en-US", {
+            timeZone: "America/Chicago",
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
+        }).format(chicagoDate);
+        return new Date(formattedDate);
     } else {
         return chicagoDate;
     }
