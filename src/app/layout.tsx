@@ -28,8 +28,8 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <SpeedInsights />
             <body className={`font-sans ${inter.variable}`}>
+                <SpeedInsights />
                 <TRPCReactProvider cookies={cookies().toString()}>
                     <ThemeProvider
                         attribute="class"
