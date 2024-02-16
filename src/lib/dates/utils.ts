@@ -1,11 +1,13 @@
-import { addHours, subHours } from "date-fns";
+import { DateTime } from "luxon";
 
 export function timeStringToDate(date: Date, timeString: string): Date {
     const timeMatch = timeString.match(/(\d+)(?::(\d+))?(am|pm)?/i);
-    const chicagoOffest = -6;
+
     const defaultHour = date.getHours();
     const defaultMinute = date.getMinutes();
-    const timeDifference = chicagoOffest - date.getTimezoneOffset();
+
+    const luxDateTime = DateTime.fromJSDate(date).setZone("America/Chicago");
+
     if (timeMatch) {
         let hours = timeMatch[1] ? parseInt(timeMatch[1], 10) : defaultHour;
         const minutes = timeMatch[2]
@@ -18,9 +20,9 @@ export function timeStringToDate(date: Date, timeString: string): Date {
             hours = 0;
         }
 
-        const newDate = addHours(date, timeDifference);
-        newDate.setHours(hours, minutes);
-        return subHours(newDate, timeDifference);
+        return luxDateTime
+            .set({ hour: hours, minute: minutes, second: 0 })
+            .toJSDate();
     } else {
         return date;
     }
