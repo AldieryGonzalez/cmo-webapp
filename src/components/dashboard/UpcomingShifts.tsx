@@ -14,11 +14,13 @@ interface namedUser extends User {
 }
 
 const UpcomingShifts = ({ events, user }: Props) => {
+    console.log("UpcomingShifts", user.searchNames);
     const upcomingShifts = events.filter((event) => {
         return (
-            inEvent(event, user.searchNames) && isAfter(event.start, new Date())
+            inEvent(event, user.searchNames) && isAfter(event.end, new Date())
         );
     });
+    console.log(upcomingShifts);
     if (upcomingShifts.length === 0) {
         return (
             <div className="mt-4 w-full rounded-lg border border-card-foreground/35 bg-card p-4 shadow">

@@ -7,7 +7,7 @@ import { api } from "~/trpc/server";
 
 export default async function Home() {
     const events = await api.events.getEvents.query({
-        start: subMonths(new Date(), 12),
+        start: subMonths(new Date(), 1),
         end: addMonths(new Date(), 1),
     });
     const messages = await api.messages.getAnnouncements.query();
