@@ -132,7 +132,8 @@ export const eventRouter = createTRPCRouter({
                         cancelled: input.cancelled,
                         syncedAt: new Date(),
                     })
-                    .onDuplicateKeyUpdate({
+                    .onConflictDoUpdate({
+                        target: events.id,
                         set: {
                             title: input.title,
                             createdByEmail: input.creator,
@@ -169,9 +170,11 @@ export const eventRouter = createTRPCRouter({
                     .select()
                     .from(shifts)
                     .where(eq(shifts.eventId, input.id));
-                const newEvent = await trx.query.events.findFirst({
-                    where: eq(events.id, input.id),
-                });
+                const newEvent = await trx
+                    .select()
+                    .from(events)
+                    .where(eq(events.id, input.id))
+                    .limit(1);
 
                 return { ...newEvent, shifts: newShifts };
             });
@@ -265,7 +268,8 @@ export const eventRouter = createTRPCRouter({
                     start: input.start,
                     end: input.end,
                 })
-                .onDuplicateKeyUpdate({
+                .onConflictDoUpdate({
+                    target: savedShifts.id,
                     set: {
                         userId: ctx.auth.user.id,
                         eventId: input.eventId,
