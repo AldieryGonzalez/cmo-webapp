@@ -11,6 +11,7 @@ import {
 import type { User } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import CartButtonBadge from "./cartButton";
 import CartBadge from "./cartLink";
 import NavLink from "./navLink";
@@ -93,7 +94,9 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
                                 <Link href="/cart">
-                                    <CartButtonBadge />
+                                    <Suspense fallback={<p>Loading...</p>}>
+                                        <CartButtonBadge />
+                                    </Suspense>
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

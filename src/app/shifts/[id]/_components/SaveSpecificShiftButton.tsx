@@ -34,9 +34,7 @@ const SaveSpecificShiftButton: React.FC<SaveSpecificShiftButtonProps> = ({
             error: "Error",
         });
         await res.then(async () => {
-            await utils.events.getSavedShifts.refetch(undefined, {
-                type: "all",
-            });
+            await utils.events.getSavedShifts.refetch();
         });
     };
 

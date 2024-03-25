@@ -1,11 +1,13 @@
-import { api } from "~/trpc/server";
+"use client";
+import { api } from "~/trpc/react";
 
 import { differenceInMinutes, endOfWeek, startOfWeek } from "date-fns";
 import CartShifts from "./_components/cartshifts";
 import ExportButton from "./_components/export";
 
-const Cart = async () => {
-    const results = await api.events.getSavedShifts.query();
+const Cart = () => {
+    const { data: results } = api.events.getSavedShifts.useQuery();
+    if (!results) return null;
     const res: Record<number, number> = {};
     const weeklyHours = results.reduce((acc, shift) => {
         const start = startOfWeek(new Date(shift.savedShifts.start)).getTime();
