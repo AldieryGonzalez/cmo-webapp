@@ -14,6 +14,7 @@ type SaveSpecificShiftButtonProps = {
 const SaveSpecificShiftButton: React.FC<SaveSpecificShiftButtonProps> = ({
     shift,
 }) => {
+    const utils = api.useUtils();
     const saveShift = api.events.saveShift.useMutation();
     const canAddToCart = !isPast(shift.end) && !shift.isFilled;
     const addToCart = async () => {
@@ -31,6 +32,11 @@ const SaveSpecificShiftButton: React.FC<SaveSpecificShiftButtonProps> = ({
                 );
             },
             error: "Error",
+        });
+        await res.then(async () => {
+            await utils.events.getSavedShifts.refetch(undefined, {
+                type: "all",
+            });
         });
     };
 

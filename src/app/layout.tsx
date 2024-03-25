@@ -5,6 +5,7 @@ import "~/styles/globals.css";
 
 import { ClerkProvider } from "@clerk/nextjs";
 import { neobrutalism } from "@clerk/themes";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import Navbar from "~/components/Navbar";
 import { ThemeProvider } from "~/components/ThemeProvider";
 import { Toaster } from "~/components/ui/sonner";

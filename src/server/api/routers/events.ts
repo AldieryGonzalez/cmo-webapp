@@ -183,7 +183,7 @@ export const eventRouter = createTRPCRouter({
         const ids = await ctx.db.select({ id: events.id }).from(events);
         const dbSet = new Set(ids.map((id) => id.id));
         const { data } = await ctx.calendar.events.list({
-            timeMin: new Date("2023-08-01").toISOString(),
+            timeMin: new Date("2024-02-01").toISOString(),
             orderBy: "startTime",
             singleEvents: true,
             maxResults: 500,
