@@ -5,9 +5,7 @@ import "~/styles/globals.css";
 
 import { ClerkProvider } from "@clerk/nextjs";
 import { neobrutalism } from "@clerk/themes";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import Navbar from "~/components/Navbar";
-import { ThemeProvider } from "~/components/ThemeProvider";
 import { Toaster } from "~/components/ui/sonner";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -32,26 +30,19 @@ export default function RootLayout({
             <body className={`font-sans ${inter.variable}`}>
                 <SpeedInsights />
                 <TRPCReactProvider cookies={cookies().toString()}>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="system"
-                        enableSystem
-                        disableTransitionOnChange
+                    <ClerkProvider
+                        appearance={{
+                            baseTheme: neobrutalism,
+                        }}
                     >
-                        <ClerkProvider
-                            appearance={{
-                                baseTheme: neobrutalism,
-                            }}
-                        >
-                            <div className="flex h-svh flex-col">
-                                <Navbar />
-                                <main className="grow overflow-y-auto">
-                                    {children}
-                                </main>
-                            </div>
-                        </ClerkProvider>
-                        <Toaster />
-                    </ThemeProvider>
+                        <div className="flex h-svh flex-col">
+                            <Navbar />
+                            <main className="grow overflow-y-auto">
+                                {children}
+                            </main>
+                        </div>
+                    </ClerkProvider>
+                    <Toaster />
                 </TRPCReactProvider>
             </body>
         </html>
