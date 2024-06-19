@@ -20,7 +20,6 @@ interface ShiftButtonProps {
 
 const ShiftButton: React.FC<ShiftButtonProps> = ({ shift, isUsers }) => {
     const canRequestSub = !isPast(shift.end) && isUsers;
-    console.log(shift);
     return (
         <li
             className={cn({

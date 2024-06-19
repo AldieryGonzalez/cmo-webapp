@@ -28,8 +28,6 @@ export const messageRouter = createTRPCRouter({
                     message: "Failed to fetch messages",
                 });
             }
-            //   return listResponse.data.messages;
-            //   const id = messages.data.messages[0]?.id;
             const messagePromises = listResponse.data.messages.map(
                 async (message) => {
                     const id = message.id ?? undefined;

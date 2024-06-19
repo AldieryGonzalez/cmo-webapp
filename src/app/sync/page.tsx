@@ -13,7 +13,6 @@ import SyncButton from "./_components/button";
 
 const SyncPage: React.FC = async () => {
     const events = await api.events.findEventsNotInDb.query();
-    console.log(events);
 
     if (events.length === 0) {
         return (

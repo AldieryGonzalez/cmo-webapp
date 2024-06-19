@@ -1,5 +1,5 @@
 import { addMonths, subMonths } from "date-fns";
-import DashboardMessages from "~/components/dashboard/DashboardMessages";
+// import DashboardMessages from "~/components/dashboard/DashboardMessages";
 import RecentShifts from "~/components/dashboard/RecentShifts";
 import UpcomingShifts from "~/components/dashboard/UpcomingShifts";
 import { getUser } from "~/lib/auth/utils";
@@ -10,7 +10,7 @@ export default async function Home() {
         start: subMonths(new Date(), 1),
         end: addMonths(new Date(), 1),
     });
-    const messages = await api.messages.getAnnouncements.query();
+    // const messages = await api.messages.getAnnouncements.query();
     const user = await getUser();
     if (!user) return null;
 
@@ -21,7 +21,7 @@ export default async function Home() {
                 <UpcomingShifts events={events} user={user} />
             </div>
             <div className="flex grow gap-4 overflow-y-auto p-2">
-                <DashboardMessages messages={messages} />
+                {/* <DashboardMessages messages={messages} /> */}
                 <RecentShifts events={events} user={user} />
             </div>
         </div>
