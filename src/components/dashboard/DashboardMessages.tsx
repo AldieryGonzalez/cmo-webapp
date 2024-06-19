@@ -2,10 +2,18 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { type MessagesOutput } from "~/server/api/routers/messages";
 
 type Props = {
-    messages: MessagesOutput["getAnnouncements"];
+    messages: {
+        date: string | undefined;
+        attatchments: never[];
+        id: string | undefined;
+        from: string;
+        to: string[];
+        subject: string | undefined;
+        text: string | undefined;
+        html: string;
+    }[];
 };
 
 const formatDate = (date: Date) => {
@@ -14,8 +22,12 @@ const formatDate = (date: Date) => {
     return `${formattedDate} (${hoursAgo})`;
 };
 
-const DashboardMessages = ({ messages }: Props) => {
+const DashboardMessages = ({ messages: serialMessages }: Props) => {
     const [index, setIndex] = useState<number>(0);
+    const messages = serialMessages.map((message) => ({
+        ...message,
+        date: new Date(message.date ?? 0),
+    }));
     const handleNextIndex = () => {
         setIndex((prev) => (prev + 1) % messages.length);
     };
@@ -50,7 +62,7 @@ const DashboardMessages = ({ messages }: Props) => {
                         </p>
                         <p className="text-sm font-normal">To: {message.to}</p>
                         <p className="text-sm font-normal">{`Sent: ${formatDate(
-                            message.date ?? new Date(0),
+                            message.date,
                         )}`}</p>
                         <hr className="my-2" />
                         <div
