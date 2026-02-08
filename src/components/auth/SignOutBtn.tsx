@@ -1,14 +1,15 @@
 "use client";
 
 import { Button } from "../ui/button";
-import { signOut } from "~/lib/auth/client";
+import { useImpersonation } from "~/lib/auth/impersonation-context";
 import { useRouter } from "next/navigation";
 
 export default function SignOutBtn() {
     const router = useRouter();
-    
-    const handleSignOut = async () => {
-        await signOut();
+    const { setUser } = useImpersonation();
+
+    const handleSignOut = () => {
+        setUser(null);
         router.push("/");
         router.refresh();
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import { DropdownMenuItem } from "../ui/dropdown-menu";
-import { signOut } from "~/lib/auth/client";
+import { useImpersonation } from "~/lib/auth/impersonation-context";
 import { useRouter } from "next/navigation";
 
 export default function SignOutMenuItem({
@@ -10,9 +10,10 @@ export default function SignOutMenuItem({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    
-    const handleSignOut = async () => {
-        await signOut();
+    const { setUser } = useImpersonation();
+
+    const handleSignOut = () => {
+        setUser(null);
         router.push("/");
         router.refresh();
     };

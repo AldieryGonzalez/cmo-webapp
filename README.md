@@ -1,14 +1,17 @@
-# Northwestern CMO Web Application - Portfolio Version
+# Northwestern CMO Web Application - Demo Version
 
-A portfolio-ready web application for managing Concert Management Office (CMO) events and shifts at Northwestern University. This application demonstrates full-stack development skills with Next.js, tRPC, Better Auth, and database integration.
+This app was one I built in college with the hopes to bring to my bosses to make the workflows of managing my workload at the concert management office more managable. The office was managed with google calendars and emails to one another to manage assignments of shifts, requesting substitutions, and any updates we had. The worst part was that due to the way scheduling for concert venue space works, we would get 3 months worth of events at a time, meaning we would have to plan out our lives 3 months in advance. It was initially powered by the google calendar api, but seeing as i have long since left that job, i no longer have access, so things are now more or less static, but the app still hits database because a fully static site is no fun. Impersonate users, preview messages, and play around!
+
+This tool gave me everything I needed to do that in around 5 minutes, with some quick scrapes and normalization.
+
+All names have been randomizes barring public event names.
 
 ## Features
 
 - **Event Management**: View upcoming concerts and events with detailed shift information
 - **Anonymous Browsing**: Visitors can browse events and save shifts to their cart without authentication
-- **Admin Panel**: Secure admin access for event synchronization and management
 - **Email Scraping**: Script to extract event data from emails (replaces Google Calendar API)
-- **Database-Backed**: All event data stored in SQLite/Turso database
+- **Database-Backend**: All event data stored in SQLite/Turso database
 - **Modern Stack**: Built with Next.js 14, tRPC, Drizzle ORM, and TailwindCSS
 
 ## Tech Stack
@@ -16,7 +19,7 @@ A portfolio-ready web application for managing Concert Management Office (CMO) e
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **API Layer**: tRPC for type-safe APIs
-- **Authentication**: Better Auth with anonymous sessions
+- **Authentication**: Impersonation-based demo auth (no login required)
 - **Database**: SQLite (Turso) with Drizzle ORM
 - **Styling**: TailwindCSS with custom components
 - **State Management**: TanStack Query (React Query)
@@ -25,18 +28,20 @@ A portfolio-ready web application for managing Concert Management Office (CMO) e
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or pnpm
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/cmo-webapp.git
 cd cmo-webapp
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
@@ -50,17 +55,19 @@ cp .env.example .env
 ```
 
 Required environment variables:
+
 - `DATABASE_URL`: Your Turso database URL
 - `DATABASE_AUTH_TOKEN`: Your Turso auth token
-- `BETTER_AUTH_SECRET`: Secret key for authentication (generate with `openssl rand -base64 32`)
 - `RESEND_API_KEY`: API key for email functionality (optional)
 
 4. Push database schema:
+
 ```bash
 npm run db:push
 ```
 
 5. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -74,6 +81,7 @@ To populate the database with event data from emails:
 1. Obtain a Gmail API access token (see [Gmail API documentation](https://developers.google.com/gmail/api))
 
 2. Run the scraping script:
+
 ```bash
 # Save scraped data to a file
 npm run scrape-emails -- --query "subject:CMO" --max-results 50 --access-token YOUR_TOKEN --output events.json
@@ -85,6 +93,7 @@ npm run populate-events -- --scrape --query "subject:CMO" --access-token YOUR_TO
 ### Script Options
 
 **Email Scraping** (`npm run scrape-emails`):
+
 - `--query`: Gmail search query
 - `--max-results`: Maximum number of emails to fetch (default: 100)
 - `--output`: Output file path
@@ -92,20 +101,12 @@ npm run populate-events -- --scrape --query "subject:CMO" --access-token YOUR_TO
 - `--to-date`: End date (ISO format)
 - `--access-token`: Gmail API access token
 
-**Database Population** (`npm run populate-events`):
-- `--input`: Load from JSON file
-- `--scrape`: Scrape emails before populating
-- `--query`: Gmail search query (only with --scrape)
-- `--max-results`: Max emails (only with --scrape)
-- `--access-token`: Gmail API token (only with --scrape)
-- `--dry-run`: Preview changes without modifying database
-
 ## Admin Setup
 
 To create an admin user:
 
 1. The first user must be created manually in the database with `role = "admin"`
-2. Alternatively, modify the Better Auth configuration to set default role to "admin" temporarily
+2. Alternatively, set the user's role to "admin" in the database
 
 ## Project Structure
 
@@ -145,6 +146,7 @@ tRPC provides end-to-end type safety from the database to the frontend, ensuring
 ## Database Schema
 
 Main tables:
+
 - `events`: Concert/event information
 - `shifts`: Individual shift assignments
 - `savedShifts`: User cart items (linked to session ID)
@@ -162,21 +164,12 @@ Main tables:
 - `npm run scrape-emails`: Scrape events from emails
 - `npm run populate-events`: Populate database with scraped events
 
-## Deployment
-
-This application is designed to be deployed on Vercel with a Turso database:
-
-1. Push your code to GitHub
-2. Import the project in Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
 ## License
 
 This is a portfolio project. Please contact the author for usage permissions.
 
 ## Contact
 
-Created by [Your Name] - [Your Email]
+Created by Aldiery Gonzalez
 
-Project Link: [https://github.com/yourusername/cmo-webapp](https://github.com/yourusername/cmo-webapp)
+Project Link: [https://github.com/aldierygonzalez/cmo-webapp](https://github.com/aldierygonzalez/cmo-webapp)
