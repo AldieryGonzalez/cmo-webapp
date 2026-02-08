@@ -119,7 +119,7 @@ function extractDates(content: string): { start: string; end: string } | null {
     const matches = content.matchAll(pattern);
     for (const match of matches) {
       try {
-        const date = new Date(match[1]);
+        const date = new Date(match[1] ?? "");
         if (!isNaN(date.getTime())) {
           dates.push(date);
         }
@@ -133,8 +133,8 @@ function extractDates(content: string): { start: string; end: string } | null {
     // Sort dates and use first two
     dates.sort((a, b) => a.getTime() - b.getTime());
     return {
-      start: dates[0].toISOString(),
-      end: dates[1].toISOString(),
+      start: dates[0]?.toISOString() ?? "",
+      end: dates[1]?.toISOString() ?? "",
     };
   }
 
@@ -145,8 +145,8 @@ function extractDates(content: string): { start: string; end: string } | null {
   if (startMatch && endMatch) {
     try {
       return {
-        start: new Date(startMatch[1]).toISOString(),
-        end: new Date(endMatch[1]).toISOString(),
+        start: new Date(startMatch[1] ?? "").toISOString(),
+        end: new Date(endMatch[1] ?? "").toISOString(),
       };
     } catch (e) {
       // Invalid dates

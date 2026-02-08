@@ -9,6 +9,7 @@
     "db:studio": "drizzle-kit studio",
     "dev": "next dev",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "scrape-emails": "tsx src/scripts/scrape-emails.ts",
     "populate-events": "tsx src/scripts/populate-events.ts",

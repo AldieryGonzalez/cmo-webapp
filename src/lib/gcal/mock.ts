@@ -154,7 +154,7 @@ export async function mockListEvents(params: {
         .select()
         .from(shifts)
         .where(
-          eq(shifts.eventId, eventIds.length === 1 ? eventIds[0] : shifts.eventId)
+          eq(shifts.eventId, eventIds.length === 1 ? eventIds[0] ?? "" : shifts.eventId)
         )
     : [];
 

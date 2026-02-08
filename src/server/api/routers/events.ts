@@ -362,7 +362,6 @@ export const eventRouter = createTRPCRouter({
             });
         }
         const { data } = await mockListEvents({
-            updatedMin: res.date.toISOString(),
             orderBy: "updated",
             timeMin: res.date.toISOString(),
         });
@@ -475,7 +474,10 @@ export const eventRouter = createTRPCRouter({
         )
         .query(async () => {
             // Return empty freebusy for portfolio version
-            return {};
+            return {
+                calendars: [] as string[],
+                busy: {} as Record<string, { start: Date, end: Date }[]>,
+            };
         }),
 });
 export type EventRouter = typeof eventRouter;

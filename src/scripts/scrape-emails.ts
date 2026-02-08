@@ -119,12 +119,12 @@ function buildQuery(config: ScraperConfig): string {
   let query = config.query;
 
   if (config.fromDate) {
-    const after = config.fromDate.toISOString().split("T")[0].replace(/-/g, "/");
+    const after = config.fromDate.toISOString().split("T")[0]?.replace(/-/g, "/") ?? "";
     query += ` after:${after}`;
   }
 
   if (config.toDate) {
-    const before = config.toDate.toISOString().split("T")[0].replace(/-/g, "/");
+    const before = config.toDate.toISOString().split("T")[0]?.replace(/-/g, "/") ?? "";
     query += ` before:${before}`;
   }
 
@@ -226,6 +226,11 @@ async function scrapeEmails(config: ScraperConfig): Promise<ScrapedEvent[]> {
           end: cmoEvent.end,
           cancelled: cmoEvent.cancelled,
           allShifts: cmoEvent.allShifts.map(shift => ({
+            isFilled: shift.filledBy !== null,
+            isConfirmed: shift.confirmationNote !== "",
+            isUnconfirmed: shift.confirmationNote === "",
+            isUnfilled: shift.filledBy === null,
+            stringify: `${shift.filledBy !== null ? shift.filledBy : "open"} (${shift.role}): ${shift.start.toISOString()}-${shift.end.toISOString()}`,
             id: shift.id,
             eventId: shift.eventId,
             filledBy: shift.filledBy,

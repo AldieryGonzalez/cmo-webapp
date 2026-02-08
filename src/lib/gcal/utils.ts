@@ -9,6 +9,7 @@ import {
 import type { DateRange } from "react-day-picker";
 import type { EventsOutput } from "~/server/api/routers/events";
 import { longDateString } from "../events/utils";
+import { getQueryDate } from "../dates/utils";
 
 type CmoEvent = EventsOutput["getEvent"];
 type FreeBusy = EventsOutput["freeBusy"];
@@ -24,11 +25,9 @@ const isBetween = (eventDate: Date, start: Date, end: Date) => {
 export const getEventsBetween = (
     events: CmoEvent[],
     start = new Date("2021-06-01"),
-    end?: Date,
+    end = addYears(new Date(), 1),
 ) => {
-    // If end is not provided, use a date far in the future
-    const endDate = end ?? addYears(new Date("2023-08-01"), 1);
-    return events.filter((event) => isBetween(event.start, start, endDate));
+    return events.filter((event) => isBetween(event.start, start, end));
 };
 
 export const getDateRangeFromSearchParams = (
@@ -87,9 +86,9 @@ export const checkFreeBusy = (events: CmoEvent[], freeBusy: FreeBusy) => {
 export type CheckedEvent = ReturnType<typeof checkFreeBusy>[number];
 
 export const checkEventFreeBusy = (event: CmoEvent, freeBusy: FreeBusy) => {
-    const busyCalendars = [];
-    for (const calendar in freeBusy) {
-        const busyTimes = freeBusy[calendar]?.busy ?? [];
+    const busyCalendars: string[] = [];
+    for (const calendarId of Object.keys(freeBusy.busy)) {
+        const busyTimes = freeBusy.busy[calendarId] ?? [];
         for (const busyTime of busyTimes) {
             if (!busyTime.start || !busyTime.end) continue;
             if (
@@ -98,7 +97,8 @@ export const checkEventFreeBusy = (event: CmoEvent, freeBusy: FreeBusy) => {
                     { start: busyTime.start, end: busyTime.end },
                 )
             ) {
-                busyCalendars.push(freeBusy[calendar]?.name ?? "Unknown");
+                busyCalendars.push(calendarId);
+                break;
             }
         }
     }

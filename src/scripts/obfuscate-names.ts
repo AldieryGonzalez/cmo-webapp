@@ -290,7 +290,7 @@ async function obfuscateNames(dryRun: boolean = false) {
         const firstLastInitialMatch = filledByTrimmed.match(/^(.+?)\s+([A-Za-z])\.?$/i);
         if (firstLastInitialMatch) {
           const [, firstName, lastInitial] = firstLastInitialMatch;
-          const normalizedPattern = `${firstName} ${lastInitial.toUpperCase()}.`;
+          const normalizedPattern = `${firstName} ${lastInitial?.toUpperCase() ?? ""}.`;
           fakeName = nameMapping.get(normalizedPattern) || nameMapping.get(normalizedPattern.toLowerCase());
         }
       }
