@@ -24,6 +24,7 @@ import {
 } from "~/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { hasPast, stringify } from "~/lib/events/utils";
+import { useQueryDate } from "~/lib/dates/query-date-context";
 import { cn } from "~/lib/utils";
 import type { Event } from "~/server/api/routers/events";
 import { api } from "~/trpc/react";
@@ -38,7 +39,8 @@ const SaveShiftButton: React.FC<SaveShiftButtonProps> = ({
     mobile = false,
 }) => {
     const [open, setOpen] = useState(false);
-    const canSaveShift = !hasPast(event);
+    const { queryDate } = useQueryDate();
+    const canSaveShift = !hasPast(event, queryDate);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

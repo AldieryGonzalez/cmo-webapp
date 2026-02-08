@@ -1,5 +1,8 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 export const env = createEnv({
     /**
@@ -18,9 +21,7 @@ export const env = createEnv({
         NODE_ENV: z
             .enum(["development", "test", "production"])
             .default("development"),
-        CLERK_SECRET_KEY: z.string().min(1),
-        RESEND_API_KEY: z.string().min(1),
-        GOOGLE_CALENDAR_ID: z.string().min(1),
+        GMAIL_ACCESS_TOKEN: z.string().optional(),
     },
 
     /**
@@ -28,13 +29,7 @@ export const env = createEnv({
      * isn't built with invalid env vars. To expose them to the client, prefix them with
      * `NEXT_PUBLIC_`.
      */
-    client: {
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-        NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
-        NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
-        NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().min(1),
-        NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().min(1), // NEXT_PUBLIC_PUBLISHABLE_KEY: z.string().min(1),
-    },
+    client: {},
 
     /**
      * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
@@ -44,20 +39,7 @@ export const env = createEnv({
         DATABASE_URL: process.env.DATABASE_URL,
         DATABASE_AUTH_TOKEN: process.env.DATABASE_AUTH_TOKEN,
         NODE_ENV: process.env.NODE_ENV,
-        CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-        RESEND_API_KEY: process.env.RESEND_API_KEY,
-        GOOGLE_CALENDAR_ID: process.env.GOOGLE_CALENDAR_ID,
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
-            process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-        NEXT_PUBLIC_CLERK_SIGN_IN_URL:
-            process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-        NEXT_PUBLIC_CLERK_SIGN_UP_URL:
-            process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
-        NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL:
-            process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
-        NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL:
-            process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
-        // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+        GMAIL_ACCESS_TOKEN: process.env.GMAIL_ACCESS_TOKEN,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

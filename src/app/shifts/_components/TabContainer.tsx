@@ -11,14 +11,18 @@ import { type CheckedEvent } from "~/lib/gcal/utils";
 
 type TabContainerProps = {
     events: CheckedEvent[];
+    myEvents: CheckedEvent[];
     searchParams: Record<string, string | undefined>;
     searchNames: string[];
+    userEmail?: string;
 };
 
 const TabContainer: React.FC<TabContainerProps> = ({
     events,
+    myEvents,
     searchParams,
     searchNames,
+    userEmail,
 }) => {
     const router = useRouter();
     const pathname = usePathname();
@@ -50,7 +54,11 @@ const TabContainer: React.FC<TabContainerProps> = ({
                 </TabsList>
                 <SearchBar searchParams={searchParams} />
             </div>
-            <MyShifts events={events} searchNames={searchNames} />
+            <MyShifts
+                events={myEvents}
+                searchNames={searchNames}
+                userEmail={userEmail}
+            />
             <OpenShifts events={events} />
             <AllShifts events={events} />
         </Tabs>

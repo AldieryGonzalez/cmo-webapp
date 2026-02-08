@@ -14,14 +14,18 @@ import SaveShiftButton from "./_components/SaveShiftButton";
 import ShiftButton from "./_components/ShiftButton";
 
 type ShiftPageProps = {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
+    searchParams: Promise<Record<string, string | undefined>>;
 };
 
-const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
+const ShiftPage: React.FC<ShiftPageProps> = async ({ params, searchParams }) => {
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+    const highlightShiftId = resolvedSearchParams.highlightShiftId;
     const user = await getUser();
-    const event = await api.events.getEvent.query(params.id);
+    const event = await api.events.getEvent.query(resolvedParams.id);
     const freeBusy = await api.events.freeBusy.query({
         start: event.start,
         end: event.end,
@@ -77,6 +81,7 @@ const ShiftPage: React.FC<ShiftPageProps> = async ({ params }) => {
                                     key={shift.id}
                                     shift={shift}
                                     isUsers={isUser}
+                                    highlighted={shift.id === highlightShiftId}
                                 />
                             );
                         })}

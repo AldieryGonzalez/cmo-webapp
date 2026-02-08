@@ -58,13 +58,12 @@ export const shiftsRelations = relations(shifts, ({ one }) => ({
 
 export const users = sqliteTable("user", {
     id: text("id", { length: 255 }).primaryKey().$defaultFn(uuid),
-    email: text("email", { length: 255 }).notNull(),
+    email: text("email", { length: 255 }).notNull().unique(),
     firstName: text("name", { length: 255 }).notNull(),
     lastName: text("lastName", { length: 255 }).notNull(),
     phoneNumber: text("phoneNumber", { length: 255 }),
     image: text("image", { length: 255 }),
     alternativeNames: text("alternativeNames", { length: 255 }),
-    calendars: text("calendars"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -81,7 +80,7 @@ export const syncs = sqliteTable("syncs", {
 
 export const savedShifts = sqliteTable("savedShifts", {
     id: text("id", { length: 255 }).primaryKey().$defaultFn(uuid),
-    userId: text("userId", { length: 255 }).notNull(),
+    sessionId: text("sessionId", { length: 255 }).notNull(),
     eventId: text("eventId", { length: 255 }).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" })
         .notNull()
@@ -91,9 +90,21 @@ export const savedShifts = sqliteTable("savedShifts", {
     end: integer("end", { mode: "timestamp" }).notNull(),
 });
 export const savedShiftsRelations = relations(savedShifts, ({ one }) => ({
-    users: one(users, { fields: [savedShifts.userId], references: [users.id] }),
     events: one(events, {
         fields: [savedShifts.eventId],
         references: [events.id],
     }),
 }));
+
+// ── Announcements / Messages ──────────────────────────────────────────
+// Shift links in contentMarkdown use the format: cmo://shift/<shiftId>
+// These are resolved at query time against the live shifts + events tables.
+
+export const messages = sqliteTable("message", {
+    id: text("id", { length: 255 }).primaryKey().$defaultFn(uuid),
+    subject: text("subject", { length: 255 }).notNull(),
+    fromEmail: text("fromEmail", { length: 255 }).notNull(),
+    toEmail: text("toEmail", { length: 255 }), // null = sent to everyone
+    sentAt: integer("sentAt", { mode: "timestamp" }).notNull(),
+    contentMarkdown: text("contentMarkdown").notNull(),
+});

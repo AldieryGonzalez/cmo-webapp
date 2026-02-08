@@ -1,3 +1,5 @@
+"use client";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,17 +10,15 @@ import {
     DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
-import type { User } from "@clerk/nextjs/server";
-import Image from "next/image";
+import type { MockUser } from "~/lib/auth/utils";
 import Link from "next/link";
 import { Suspense } from "react";
 import CartButtonBadge from "./cartButton";
 import CartBadge from "./cartLink";
 import NavLink from "./navLink";
-import SignOutMenuItem from "./signoutMenuItem";
 
 type UserContentsProps = {
-    user: User;
+    user: MockUser | null;
 };
 
 const UserContents: React.FC<UserContentsProps> = ({ user }) => {
@@ -38,18 +38,14 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
                 >
                     Shifts
                 </NavLink>
-                <NavLink
-                    href="/messages"
-                    className="hidden text-base font-medium text-white md:block"
-                >
-                    Messages
-                </NavLink>
-                {/* <NavLink
-          href="/calendar"
-          className="hidden text-base font-medium text-white md:block"
-        >
-          Calendar
-        </NavLink> */}
+                {user && (
+                    <NavLink
+                        href="/messages"
+                        className="hidden text-base font-medium text-white md:block"
+                    >
+                        Messages
+                    </NavLink>
+                )}
                 <NavLink
                     href="/cart"
                     className="hidden gap-0.5 rounded-full border-black border-opacity-10 bg-purple-900 text-base font-medium text-white md:flex md:items-center md:justify-center md:gap-0.5"
@@ -60,14 +56,10 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button>
-                            <div className=" hidden items-center  justify-start gap-0.5 rounded-full border-black border-opacity-10 bg-purple-900 md:flex ">
-                                <Image
-                                    className="rounded-full"
-                                    src={user.imageUrl}
-                                    alt="Profile photo"
-                                    width={32}
-                                    height={32}
-                                />
+                            <div className="hidden items-center justify-start gap-0.5 rounded-full border-black border-opacity-10 bg-purple-900 p-1 md:flex">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-bold text-purple-900">
+                                    {user?.name?.[0]?.toUpperCase() ?? "?"}
+                                </div>
                             </div>
                             <div className="md:hidden">
                                 <svg
@@ -88,7 +80,9 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" collisionPadding={20}>
-                        <DropdownMenuLabel>{`Welcome, ${user.firstName}`}</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                            {user ? `Viewing as ${user.name}` : "No user selected"}
+                        </DropdownMenuLabel>
 
                         <DropdownMenuGroup className="md:hidden">
                             <DropdownMenuSeparator />
@@ -106,24 +100,16 @@ const UserContents: React.FC<UserContentsProps> = ({ user }) => {
                             <DropdownMenuItem asChild>
                                 <Link href="/shifts">Shifts</Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                                <Link href="/messages">Messages</Link>
-                            </DropdownMenuItem>
-                            {/* <DropdownMenuItem asChild>
-                <Link href="/calendar">Calendar</Link>
-              </DropdownMenuItem> */}
+                            {user && (
+                                <DropdownMenuItem asChild>
+                                    <Link href="/messages">Messages</Link>
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        {/* <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator /> */}
-                        <SignOutMenuItem>Log out</SignOutMenuItem>
+                        <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
+                            Use the floating control to switch users
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

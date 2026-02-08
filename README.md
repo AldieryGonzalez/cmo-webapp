@@ -1,28 +1,175 @@
-# Create T3 App
+# Northwestern CMO Web Application - Demo Version
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This app was one I built in college with the hopes to bring to my bosses to make the workflows of managing my workload at the concert management office more managable. The office was managed with google calendars and emails to one another to manage assignments of shifts, requesting substitutions, and any updates we had. The worst part was that due to the way scheduling for concert venue space works, we would get 3 months worth of events at a time, meaning we would have to plan out our lives 3 months in advance. It was initially powered by the google calendar api, but seeing as i have long since left that job, i no longer have access, so things are now more or less static, but the app still hits database because a fully static site is no fun. Impersonate users, preview messages, and play around!
 
-## What's next? How do I make an app with this?
+This tool gave me everything I needed to do that in around 5 minutes, with some quick scrapes and normalization.
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+All names have been randomizes barring public event names.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Features
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- **Event Management**: View upcoming concerts and events with detailed shift information
+- **Anonymous Browsing**: Visitors can browse events and save shifts to their cart without authentication
+- **Email Scraping**: Script to extract event data from emails (replaces Google Calendar API)
+- **Database-Backend**: All event data stored in SQLite/Turso database
+- **Modern Stack**: Built with Next.js 14, tRPC, Drizzle ORM, and TailwindCSS
 
-## Learn More
+## Tech Stack
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **API Layer**: tRPC for type-safe APIs
+- **Authentication**: Impersonation-based demo auth (no login required)
+- **Database**: SQLite (Turso) with Drizzle ORM
+- **Styling**: TailwindCSS with custom components
+- **State Management**: TanStack Query (React Query)
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Getting Started
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Prerequisites
 
-## How do I deploy this?
+- Node.js 18+
+- npm or pnpm
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/cmo-webapp.git
+cd cmo-webapp
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set up environment variables:
+
+Copy `.env.example` to `.env` and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+Required environment variables:
+
+- `DATABASE_URL`: Your Turso database URL
+- `DATABASE_AUTH_TOKEN`: Your Turso auth token
+- `RESEND_API_KEY`: API key for email functionality (optional)
+
+4. Push database schema:
+
+```bash
+npm run db:push
+```
+
+5. Run the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to see the application.
+
+## Email Scraping
+
+To populate the database with event data from emails:
+
+1. Obtain a Gmail API access token (see [Gmail API documentation](https://developers.google.com/gmail/api))
+
+2. Run the scraping script:
+
+```bash
+# Save scraped data to a file
+npm run scrape-emails -- --query "subject:CMO" --max-results 50 --access-token YOUR_TOKEN --output events.json
+
+# Or populate database directly
+npm run populate-events -- --scrape --query "subject:CMO" --access-token YOUR_TOKEN
+```
+
+### Script Options
+
+**Email Scraping** (`npm run scrape-emails`):
+
+- `--query`: Gmail search query
+- `--max-results`: Maximum number of emails to fetch (default: 100)
+- `--output`: Output file path
+- `--from-date`: Start date (ISO format)
+- `--to-date`: End date (ISO format)
+- `--access-token`: Gmail API access token
+
+## Admin Setup
+
+To create an admin user:
+
+1. The first user must be created manually in the database with `role = "admin"`
+2. Alternatively, set the user's role to "admin" in the database
+
+## Project Structure
+
+```
+src/
+├── app/              # Next.js app router pages
+├── components/       # React components
+├── lib/
+│   ├── auth/        # Authentication utilities
+│   ├── email/       # Email parsing utilities
+│   └── gcal/        # Google Calendar format utilities
+├── scripts/         # Data scraping scripts
+├── server/
+│   ├── api/         # tRPC routers
+│   └── db/          # Database schema and connection
+└── styles/          # Global styles
+```
+
+## Key Features Explained
+
+### Anonymous Sessions
+
+Users can browse events and save shifts to their cart without creating an account. The cart is tied to their session ID, allowing a seamless browsing experience.
+
+### Admin-Only Routes
+
+The `/sync` page and certain API endpoints are protected and only accessible to users with the `admin` role. The middleware automatically redirects unauthorized users.
+
+### Mock Calendar API
+
+The application uses a mock Google Calendar API layer that reads from the database instead of making external API calls. This maintains compatibility with the existing `CmoEvent` class while eliminating external dependencies.
+
+### Type-Safe API
+
+tRPC provides end-to-end type safety from the database to the frontend, ensuring data consistency and reducing runtime errors.
+
+## Database Schema
+
+Main tables:
+
+- `events`: Concert/event information
+- `shifts`: Individual shift assignments
+- `savedShifts`: User cart items (linked to session ID)
+- `users`: User accounts (admin only)
+- `syncs`: Sync operation tracking
+
+## Scripts
+
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run start`: Start production server
+- `npm run lint`: Run ESLint
+- `npm run db:push`: Push database schema changes
+- `npm run db:studio`: Open Drizzle Studio
+- `npm run scrape-emails`: Scrape events from emails
+- `npm run populate-events`: Populate database with scraped events
+
+## License
+
+This is a portfolio project. Please contact the author for usage permissions.
+
+## Contact
+
+Created by Aldiery Gonzalez
+
+Project Link: [https://github.com/aldierygonzalez/cmo-webapp](https://github.com/aldierygonzalez/cmo-webapp)

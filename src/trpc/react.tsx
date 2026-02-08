@@ -15,7 +15,17 @@ export function TRPCReactProvider(props: {
     children: React.ReactNode;
     cookies: string;
 }) {
-    const [queryClient] = useState(() => new QueryClient());
+    const [queryClient] = useState(
+        () =>
+            new QueryClient({
+                defaultOptions: {
+                    queries: {
+                        staleTime: 60 * 1000, // 1 min: avoid refetch on every mount/refocus
+                        cacheTime: 5 * 60 * 1000, // 5 min keep in cache
+                    },
+                },
+            }),
+    );
 
     const [trpcClient] = useState(() =>
         api.createClient({

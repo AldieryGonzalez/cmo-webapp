@@ -1,27 +1,22 @@
-import type { User } from "@clerk/nextjs/server";
 import { isAfter } from "date-fns";
-import { getUser } from "~/lib/auth/utils";
 import { inEvent, type Event } from "~/lib/events/utils";
 import DashboardShiftCard from "./DashboardShiftCard";
+import type { MockUser } from "~/lib/auth/utils";
 
 type Props = {
     events: Event[];
-    user: namedUser;
+    user: MockUser | null;
+    queryDate: Date;
 };
 
-interface namedUser extends User {
-    searchNames: string[];
-}
-
-const RecentShifts = async ({ events, user }: Props) => {
-    const res = await getUser();
-    if (!res) return null;
+const RecentShifts = ({ events, user, queryDate }: Props) => {
+    if (!user) return null;
 
     const recentShifts = events
         .filter((event) => {
             return (
-                inEvent(event, user.searchNames) &&
-                isAfter(new Date(), event.end)
+                inEvent(event, user.searchNames, user.email) &&
+                isAfter(queryDate, event.end)
             );
         })
         .reverse();

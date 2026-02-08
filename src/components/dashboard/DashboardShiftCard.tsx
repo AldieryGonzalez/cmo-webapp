@@ -1,4 +1,3 @@
-import type { User } from "@clerk/nextjs/server";
 import Link from "next/link";
 import {
   longTimeRangeString,
@@ -6,14 +5,12 @@ import {
   type Event,
 } from "~/lib/events/utils";
 import { Card, CardContent } from "../ui/card";
+import type { MockUser } from "~/lib/auth/utils";
 
 type ShiftCardProps = {
   event: Event;
-  user: namedUser;
+  user: MockUser;
 };
-interface namedUser extends User {
-  searchNames: string[];
-}
 
 const DashboardShiftCard: React.FC<ShiftCardProps> = async ({
   event,
@@ -27,7 +24,7 @@ const DashboardShiftCard: React.FC<ShiftCardProps> = async ({
       <CardContent className="pl-1">
         <div className="inline-flex flex-col items-start justify-start gap-1 pr-10">
           <div className="w-[200px] text-sm font-semibold leading-tight text-slate-900">
-            {roleInEvent(event, user.searchNames)}
+            {roleInEvent(event, user.searchNames, user.email)}
           </div>
           <div className="w-[200px] text-[11px] font-normal leading-tight text-slate-900">
             {event.title}

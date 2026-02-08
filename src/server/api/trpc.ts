@@ -8,25 +8,11 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
-// import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { env } from "~/env";
 
 import { db } from "~/server/db";
-
-import {
-    calendar as CalendarClient,
-    type calendar_v3,
-} from "@googleapis/calendar";
-import { gmail as GmailClient, type gmail_v1 } from "@googleapis/gmail";
-
-import {
-    clerkClient,
-    auth as getAuth,
-    type SignedInAuthObject,
-    type SignedOutAuthObject,
-} from "@clerk/nextjs/server";
+import { getUserAuth, type MockUser, type MockSession } from "~/lib/auth/utils";
 
 /**
  * 1. CONTEXT
@@ -42,25 +28,25 @@ import {
  */
 
 interface AuthContext {
-    auth: SignedInAuthObject | SignedOutAuthObject;
+    session: MockSession | null;
+    user: MockUser | null;
 }
 
-export const createContextInner = async ({ auth }: AuthContext) => {
-    const calendar: calendar_v3.Calendar | null = null;
-    const gmail: gmail_v1.Gmail | null = null;
-
-    const session = await clerkClient.sessions.getSession(auth.sessionId ?? "");
-    const user = await clerkClient.users.getUser(auth.userId ?? "");
-
+export const createContextInner = async (authContext: AuthContext) => {
     return {
-        auth: { session, user },
+        auth: authContext,
         db,
-        calendar,
-        gmail,
     };
 };
+
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-    const innerContext = await createContextInner({ auth: getAuth() });
+    // Get impersonated user from cookie
+    const { session, user } = await getUserAuth();
+
+    const innerContext = await createContextInner({
+        session: session ?? null,
+        user: user ?? null,
+    });
 
     return {
         ...innerContext,
@@ -114,80 +100,73 @@ export const createTRPCRouter = t.router;
  */
 export const publicProcedure = t.procedure;
 
-/** Reusable middleware that enforces users are logged in before running the procedure. */
+/**
+ * Anonymous procedure
+ * 
+ * In demo mode this is the same as public — everyone is allowed.
+ */
+export const anonymousProcedure = t.procedure;
+
+/**
+ * Authenticated procedure
+ * 
+ * In demo mode we still enforce that an impersonated user has been selected.
+ */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-    if (!ctx.auth.session || !ctx.auth.user) {
+    if (!ctx.auth.user) {
         throw new TRPCError({
-            message: "NO SESSION/USER FOUND",
+            message: "NO IMPERSONATED USER SELECTED",
             code: "UNAUTHORIZED",
         });
     }
+
     return next({
         ctx: {
-            // infers the `session` as non-nullable
             auth: {
-                ...ctx.auth,
-                session: ctx.auth.session,
+                session: ctx.auth.session!,
                 user: ctx.auth.user,
             },
         },
     });
 });
 
-/** Reusable middleware for piping a api clients to trpc procedures */
-const googleApiMiddleware = t.middleware(async ({ ctx, next }) => {
-    if (!ctx.auth.session || !ctx.auth.user) {
+export const authenticatedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+/**
+ * Admin procedure
+ * 
+ * In demo mode every impersonated user is treated as admin.
+ */
+const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
+    if (!ctx.auth.user) {
         throw new TRPCError({
-            message: "NO SESSION/USER FOUND",
+            message: "NO IMPERSONATED USER SELECTED",
             code: "UNAUTHORIZED",
         });
     }
-    const [OauthAccessToken] = await clerkClient.users.getUserOauthAccessToken(
-        ctx.auth.user.id,
-        "oauth_google",
-    );
 
-    const { token } = OauthAccessToken!;
-    const calendar = CalendarClient({
-        version: "v3",
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-            calendarId: env.GOOGLE_CALENDAR_ID,
-            order: "startTime",
-        },
-    });
-    const gmail = GmailClient({
-        version: "v1",
-        headers: { Authorization: `Bearer ${token}` },
-    });
     return next({
         ctx: {
             auth: {
-                ...ctx.auth,
-                session: ctx.auth.session,
+                session: ctx.auth.session!,
                 user: ctx.auth.user,
             },
-            calendar,
-            gmail,
         },
     });
 });
 
-/**
- * Protected (authenticated) procedure
- *
- * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
- * the session is valid and guarantees `ctx.session.user` is not null.
- *
- * @see https://trpc.io/docs/procedures
- */
-export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+export const adminProcedure = t.procedure.use(enforceUserIsAdmin);
 
 /**
- * Protected Google API Procedure
- *
- * If you want to use a verified client of GoogleAPI, and also the session, use this. It verifies
- * the session and user, and provides clients built into the context instead of creating one on a
- * per route basis.
+ * Protected procedure (for backwards compatibility)
+ * 
+ * Same as authenticatedProcedure
  */
-export const protectedGapiProcedure = t.procedure.use(googleApiMiddleware);
+export const protectedProcedure = authenticatedProcedure;
+
+/**
+ * Legacy: protectedGapiProcedure (now admin-only without Google API)
+ * 
+ * Used to provide Google API clients, now just admin access
+ */
+export const protectedGapiProcedure = adminProcedure;

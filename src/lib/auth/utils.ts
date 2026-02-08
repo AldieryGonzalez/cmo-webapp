@@ -1,81 +1,110 @@
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { contacts } from "../const/contacts";
+import { cache } from "react";
+import { cookies } from "next/headers";
+import { eq } from "drizzle-orm";
+import { db } from "~/server/db";
+import { users } from "~/server/db/schema";
+
+const IMPERSONATION_COOKIE_NAME = "impersonate-user";
+
+/**
+ * Mock user type used throughout the app when impersonating a user.
+ */
+export type MockUser = {
+  id: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  role: "admin" | "user";
+  isAnonymous: false;
+  searchNames: string[];
+};
+
+export type MockSession = {
+  id: string;
+  user: MockUser;
+};
 
 export type AuthSession = {
-  session: {
-    user: {
-      id: string;
-      name?: string;
-      email?: string;
-    };
-  } | null;
+  session: MockSession | null;
+  user: MockUser | null;
 };
 
-export const getUserAuth = async () => {
-  // find out more about setting up 'sessionClaims' (custom sessions) here: https://clerk.com/docs/backend-requests/making/custom-session-token
-  const { userId, sessionId } = auth();
-  if (userId && sessionId) {
-    const session = await clerkClient.sessions.getSession(sessionId);
-    const user = await clerkClient.users.getUser(userId);
-    return {
-      session,
-      user,
-    };
-  } else {
-    return { session: null, user: null };
-  }
-};
+type DbUser = typeof users.$inferSelect;
 
-export const getUser = async () => {
-  const user = await currentUser();
-  if (!user) return null;
-  const contact = nameToContact(user.firstName + " " + user.lastName);
-  if (!contact) return null;
-  const names = contactToSearchNames(contact);
+const splitAltNames = (altNames?: string | null) =>
+  altNames
+    ? altNames
+        .split(",")
+        .map((name) => name.trim())
+        .filter(Boolean)
+    : [];
+
+/** Build a mock user from a db entry */
+function dbUserToMockUser(user: DbUser): MockUser {
+  const fullName = `${user.firstName} ${user.lastName}`;
   return {
-    ...user,
-    searchNames: names,
+    id: user.id,
+    email: user.email,
+    name: fullName,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    role: "user",
+    isAnonymous: false as const,
+    searchNames: [fullName, ...splitAltNames(user.alternativeNames)],
   };
+}
+
+/**
+ * Read impersonation cookie and return the corresponding mock user (server-side).
+ * Cached per request so layout + page only do one cookie read and one DB lookup.
+ */
+export const getUserAuth = cache(async (): Promise<AuthSession> => {
+  const cookieStore = await cookies();
+  const email = cookieStore.get(IMPERSONATION_COOKIE_NAME)?.value;
+
+  if (email) {
+    try {
+      const decoded = decodeURIComponent(email);
+      const [dbUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, decoded))
+        .limit(1);
+      if (dbUser) {
+        const user = dbUserToMockUser(dbUser);
+        return { session: { id: `mock-session-${user.email}`, user }, user };
+      }
+    } catch {
+      // ignore decode or lookup errors
+    }
+  }
+
+  return { session: null, user: null };
+});
+
+/**
+ * Get current impersonated user (server-side)
+ */
+export const getUser = async () => {
+  const { user } = await getUserAuth();
+  return user;
 };
 
+/**
+ * Check if a user is being impersonated. Never redirects — this is a demo app.
+ */
 export const checkAuth = async () => {
-  const { userId } = auth();
-  if (!userId) redirect("/sign-in");
+  const { user } = await getUserAuth();
+  // In demo mode we return the user or null — no redirects
+  return user;
 };
 
-export function nameToContact(name: string | null) {
-  if (!name) return null;
-  try {
-    const firstName = name.split(" ")[0]?.toLowerCase();
-    const lastInitial = name.split(" ")[1]?.[0];
-    if (!firstName || !lastInitial) return null;
-    const contact = contacts.find((contact) => {
-      const contactNames = allFirstNames(contact).map((name) =>
-        name.toLowerCase(),
-      );
-      return (
-        contactNames.some((name) => name === firstName) &&
-        contact.lastName.startsWith(lastInitial)
-      );
-    });
-    if (!contact) return null;
-    return contact;
-  } catch (e) {
-    return null;
-  }
-}
+/**
+ * In demo mode every impersonated user is treated as admin.
+ */
+export const checkAdmin = async () => {
+  const user = await checkAuth();
+  return user;
+};
 
-export function contactToSearchNames(contact: (typeof contacts)[0]) {
-  return allFirstNames(contact).map(
-    (name) => `${name} ${contact.lastName.charAt(0)}.`,
-  );
-}
-
-function allFirstNames(contact: (typeof contacts)[0]) {
-  const names: string[] = [contact.firstName];
-  for (const altName of contact.altNames.split(",")) {
-    names.push(altName);
-  }
-  return names;
-}

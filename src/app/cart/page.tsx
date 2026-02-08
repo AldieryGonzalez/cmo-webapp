@@ -6,7 +6,9 @@ import CartShifts from "./_components/cartshifts";
 import ExportButton from "./_components/export";
 
 const Cart = () => {
-    const { data: results } = api.events.getSavedShifts.useQuery();
+    const { data: results } = api.events.getSavedShifts.useQuery(undefined, {
+        staleTime: 30 * 1000, // 30 s — refetched after add/remove
+    });
     if (!results) return null;
     const res: Record<number, number> = {};
     const weeklyHours = results.reduce((acc, shift) => {

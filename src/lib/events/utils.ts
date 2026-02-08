@@ -11,16 +11,32 @@ export function getFilledShifts(event: Event) {
     return event.shifts.filter((shift) => shift.isFilled);
 }
 
-export function inEvent(event: Event, employeeNames: string[]) {
+export function inEvent(
+    event: Event,
+    employeeNames: string[],
+    userEmail?: string,
+) {
     for (const shift of event.shifts) {
-        if (employeeNames.some((name) => name == shift.filledBy)) return true;
+        if (userEmail && shift.user === userEmail) return true;
+        if (employeeNames.some((name) => name === shift.filledBy)) return true;
     }
     return false;
 }
 
-export function roleInEvent(event: Event, employeeNames: string[]) {
+export function roleInEvent(
+    event: Event,
+    employeeNames: string[],
+    userEmail?: string,
+) {
+    if (userEmail) {
+        const shiftForUser = event.shifts.find(
+            (shift) => shift.user === userEmail,
+        );
+        if (shiftForUser) return shiftForUser.role;
+    }
+
     for (const shift of event.shifts) {
-        if (employeeNames.some((name) => name == shift.filledBy))
+        if (employeeNames.some((name) => name === shift.filledBy))
             return shift.role;
     }
     return false;
@@ -90,8 +106,8 @@ export function hasOpenShifts(event: Event) {
     return getOpenShifts(event).length > 0 && !event.cancelled;
 }
 
-export function hasPast(event: Event) {
-    return event.end < new Date();
+export function hasPast(event: Event, queryDate: Date) {
+    return event.end < queryDate;
 }
 
 export function longDateString(event: Event) {

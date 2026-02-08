@@ -1,18 +1,36 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import { type calendar_v3 } from "@googleapis/calendar";
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import { cache } from "react";
 import { eachMonthOfInterval, endOfMonth } from "date-fns";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { env } from "~/env";
 import { CmoEvent } from "~/lib/gcal/CmoEvent";
+import { getQueryDate } from "~/lib/dates/utils";
 
 import {
     createTRPCRouter,
-    protectedGapiProcedure,
-    protectedProcedure,
+    publicProcedure,
+    anonymousProcedure,
+    adminProcedure,
 } from "~/server/api/trpc";
-import { events, savedShifts, shifts, syncs } from "~/server/db/schema";
+import { db } from "~/server/db";
+import { events, savedShifts, shifts, syncs, users } from "~/server/db/schema";
+import { mockListEvents, mockGetEvent } from "~/lib/gcal/mock";
+import { buildUserLookup } from "~/lib/users/lookup";
+
+/** Cached per request so getEvents and getEvent only load the users table once. */
+const getCachedUserRowsForLookup = cache(async (dbInstance: typeof db) => {
+    return dbInstance
+        .select({
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            alternativeNames: users.alternativeNames,
+        })
+        .from(users);
+});
 
 const InputShift = z.object({
     isFilled: z.boolean(),
@@ -44,8 +62,35 @@ interface FreeBusyCalendar extends calendar_v3.Schema$FreeBusyCalendar {
     name: string;
 }
 
+type UserEventShift = {
+    id: string;
+    eventId: string;
+    role: string;
+    start: Date;
+    end: Date;
+    user: string | null;
+    filledBy: string | null;
+    confirmationNote: string | null;
+    cancelled: boolean;
+    isFilled: boolean;
+};
+
+type UserEvent = {
+    id: string;
+    title: string;
+    location: string;
+    notes: string;
+    creator: string;
+    updated: Date;
+    created: Date;
+    start: Date;
+    end: Date;
+    cancelled: boolean;
+    shifts: UserEventShift[];
+};
+
 export const eventRouter = createTRPCRouter({
-    getEvents: protectedGapiProcedure
+    getEvents: publicProcedure
         .input(
             z
                 .object({
@@ -54,11 +99,11 @@ export const eventRouter = createTRPCRouter({
                 })
                 .optional(),
         )
-        .query(async ({ ctx, input }) => {
-            const today = new Date();
+        .query(async ({ input, ctx }) => {
+            const today = await getQueryDate();
             const start = input?.start.toISOString() ?? today.toISOString();
             const end = input?.end.toISOString() ?? undefined;
-            const { data } = await ctx.calendar.events.list({
+            const { data } = await mockListEvents({
                 timeMin: start,
                 timeMax: end,
                 orderBy: "startTime",
@@ -68,14 +113,16 @@ export const eventRouter = createTRPCRouter({
             const gcalEvents = data.items;
             if (!gcalEvents) {
                 throw new TRPCError({
-                    message: "FAILED TO GET GCAL EVENTS",
+                    message: "FAILED TO GET EVENTS",
                     code: "INTERNAL_SERVER_ERROR",
                 });
             }
+            const userRows = await getCachedUserRowsForLookup(ctx.db);
+            const userLookup = buildUserLookup(userRows);
             const res = gcalEvents.map((event) => {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { openShifts, filledShifts, allShifts, ...newEvent } =
-                    new CmoEvent(event);
+                    new CmoEvent(event, userLookup);
                 const shifts = allShifts.map((shift) => {
                     return {
                         ...shift,
@@ -87,22 +134,103 @@ export const eventRouter = createTRPCRouter({
             });
             return res;
         }),
-    getEvent: protectedGapiProcedure
+    getUserEvents: publicProcedure
+        .input(
+            z.object({
+                userEmail: z.string().email(),
+                start: z.date(),
+                end: z.date().optional(),
+            }),
+        )
+        .query(async ({ input, ctx }) => {
+            const conditions = [
+                eq(shifts.userEmail, input.userEmail),
+                gte(events.start, input.start),
+            ];
+            if (input.end) {
+                conditions.push(lte(events.end, input.end));
+            }
+
+            const rows = await ctx.db
+                .select({
+                    eventId: events.id,
+                    eventTitle: events.title,
+                    eventLocation: events.location,
+                    eventNotes: events.notes,
+                    eventCreator: events.createdByEmail,
+                    eventUpdated: events.updatedAt,
+                    eventCreated: events.createdAt,
+                    eventStart: events.start,
+                    eventEnd: events.end,
+                    eventCancelled: events.cancelled,
+                    shiftId: shifts.id,
+                    shiftRole: shifts.role,
+                    shiftStart: shifts.start,
+                    shiftEnd: shifts.end,
+                    shiftUserEmail: shifts.userEmail,
+                    shiftFilledBy: shifts.filledBy,
+                    shiftConfirmationNote: shifts.confirmationNote,
+                    shiftCancelled: shifts.cancelled,
+                })
+                .from(shifts)
+                .innerJoin(events, eq(shifts.eventId, events.id))
+                .where(and(...conditions))
+                .orderBy(asc(events.start), asc(shifts.start));
+
+            const eventMap = new Map<string, UserEvent>();
+            for (const row of rows) {
+                const existing = eventMap.get(row.eventId);
+                const event =
+                    existing ??
+                    ({
+                        id: row.eventId,
+                        title: row.eventTitle,
+                        location: row.eventLocation,
+                        notes: row.eventNotes ?? "",
+                        creator: row.eventCreator,
+                        updated: row.eventUpdated,
+                        created: row.eventCreated,
+                        start: row.eventStart,
+                        end: row.eventEnd,
+                        cancelled: row.eventCancelled ?? false,
+                        shifts: [],
+                    } satisfies UserEvent);
+
+                event.shifts.push({
+                    id: row.shiftId,
+                    eventId: row.eventId,
+                    role: row.shiftRole,
+                    start: row.shiftStart,
+                    end: row.shiftEnd,
+                    user: row.shiftUserEmail,
+                    filledBy: row.shiftFilledBy,
+                    confirmationNote: row.shiftConfirmationNote,
+                    cancelled: row.shiftCancelled ?? false,
+                    isFilled: row.shiftFilledBy !== null,
+                });
+
+                if (!existing) {
+                    eventMap.set(row.eventId, event);
+                }
+            }
+
+            return Array.from(eventMap.values());
+        }),
+    getEvent: publicProcedure
         .input(z.string())
-        .query(async ({ ctx, input }) => {
-            const { data: gcalEvent } = await ctx.calendar.events.get({
-                eventId: input,
-                timeZone: "(GMT-06:00) Central Time - Chicago",
-            });
+        .query(async ({ input, ctx }) => {
+            const { data: gcalEvent } = await mockGetEvent(input);
             if (!gcalEvent) {
                 throw new TRPCError({
-                    message: "FAILED TO GET GCAL EVENT",
+                    message: "FAILED TO GET EVENT",
                     code: "INTERNAL_SERVER_ERROR",
                 });
             }
+            const userRows = await getCachedUserRowsForLookup(ctx.db);
+            const userLookup = buildUserLookup(userRows);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { openShifts, filledShifts, allShifts, ...newEvent } =
-                new CmoEvent(gcalEvent);
+                new CmoEvent(gcalEvent, userLookup);
             const shifts = allShifts.map((shift) => {
                 return {
                     ...shift,
@@ -112,7 +240,7 @@ export const eventRouter = createTRPCRouter({
 
             return { ...newEvent, shifts };
         }),
-    syncEvent: protectedProcedure
+    syncEvent: adminProcedure
         .input(InputEvent)
         .mutation(async ({ ctx, input }) => {
             return await ctx.db.transaction(async (trx) => {
@@ -179,10 +307,10 @@ export const eventRouter = createTRPCRouter({
                 return { ...newEvent, shifts: newShifts };
             });
         }),
-    findEventsNotInDb: protectedGapiProcedure.query(async ({ ctx }) => {
+    findEventsNotInDb: adminProcedure.query(async ({ ctx }) => {
         const ids = await ctx.db.select({ id: events.id }).from(events);
         const dbSet = new Set(ids.map((id) => id.id));
-        const { data } = await ctx.calendar.events.list({
+        const { data } = await mockListEvents({
             timeMin: new Date("2024-02-01").toISOString(),
             orderBy: "startTime",
             singleEvents: true,
@@ -191,16 +319,25 @@ export const eventRouter = createTRPCRouter({
         const gcalEvents = data.items;
         if (!gcalEvents) {
             throw new TRPCError({
-                message: "FAILED TO GET GCAL EVENTS",
+                message: "FAILED TO GET EVENTS",
                 code: "INTERNAL_SERVER_ERROR",
             });
         }
+        const userRows = await ctx.db
+            .select({
+                email: users.email,
+                firstName: users.firstName,
+                lastName: users.lastName,
+                alternativeNames: users.alternativeNames,
+            })
+            .from(users);
+        const userLookup = buildUserLookup(userRows);
         const res = gcalEvents
             .filter((gce) => !dbSet.has(gce.id ?? ""))
             .map((event) => {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { openShifts, filledShifts, allShifts, ...newEvent } =
-                    new CmoEvent(event);
+                    new CmoEvent(event, userLookup);
                 const newAllShifts = allShifts.map((shift) => {
                     return {
                         ...shift,
@@ -212,7 +349,7 @@ export const eventRouter = createTRPCRouter({
             });
         return res;
     }),
-    findUpdatedEvents: protectedGapiProcedure.query(async ({ ctx }) => {
+    findUpdatedEvents: adminProcedure.query(async ({ ctx }) => {
         const [res] = await ctx.db
             .select({ date: syncs.lastSynced })
             .from(syncs)
@@ -224,18 +361,26 @@ export const eventRouter = createTRPCRouter({
                 code: "INTERNAL_SERVER_ERROR",
             });
         }
-        const { data } = await ctx.calendar.events.list({
-            updatedMin: res.date.toISOString(),
+        const { data } = await mockListEvents({
             orderBy: "updated",
             timeMin: res.date.toISOString(),
         });
         const gcalEvents = data.items;
         if (!gcalEvents) {
             throw new TRPCError({
-                message: "FAILED TO GET GCAL EVENTS",
+                message: "FAILED TO GET EVENTS",
                 code: "INTERNAL_SERVER_ERROR",
             });
         }
+        const userRows = await ctx.db
+            .select({
+                email: users.email,
+                firstName: users.firstName,
+                lastName: users.lastName,
+                alternativeNames: users.alternativeNames,
+            })
+            .from(users);
+        const userLookup = buildUserLookup(userRows);
         return gcalEvents
             .filter((event) => {
                 const eventUpdated = new Date(event.updated ?? 0);
@@ -244,7 +389,7 @@ export const eventRouter = createTRPCRouter({
             .map((event) => {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { openShifts, filledShifts, allShifts, ...newEvent } =
-                    new CmoEvent(event);
+                    new CmoEvent(event, userLookup);
                 const newAllShifts = allShifts.map((shift) => {
                     return {
                         ...shift,
@@ -255,14 +400,21 @@ export const eventRouter = createTRPCRouter({
                 return { ...newEvent, shifts: newAllShifts };
             });
     }),
-    saveShift: protectedProcedure
+    saveShift: anonymousProcedure
         .input(InputShift)
         .mutation(async ({ ctx, input }) => {
+            if (!ctx.auth.session) {
+                throw new TRPCError({
+                    message: "NO SESSION FOUND",
+                    code: "UNAUTHORIZED",
+                });
+            }
+            
             await ctx.db
                 .insert(savedShifts)
                 .values({
                     id: input.id,
-                    userId: ctx.auth.user.id,
+                    sessionId: ctx.auth.session.id,
                     eventId: input.eventId,
                     role: input.role,
                     start: input.start,
@@ -271,7 +423,7 @@ export const eventRouter = createTRPCRouter({
                 .onConflictDoUpdate({
                     target: savedShifts.id,
                     set: {
-                        userId: ctx.auth.user.id,
+                        sessionId: ctx.auth.session.id,
                         eventId: input.eventId,
                         role: input.role,
                         start: input.start,
@@ -279,90 +431,53 @@ export const eventRouter = createTRPCRouter({
                     },
                 });
         }),
-    getSavedShifts: protectedProcedure.query(async ({ ctx }) => {
+    getSavedShifts: anonymousProcedure.query(async ({ ctx }) => {
+        if (!ctx.auth.session) {
+            return [];
+        }
+        
         const shifts = await ctx.db
             .select()
             .from(savedShifts)
-            .where(eq(savedShifts.userId, ctx.auth.user.id))
+            .where(eq(savedShifts.sessionId, ctx.auth.session.id))
             .leftJoin(events, eq(events.id, savedShifts.eventId))
             .orderBy(asc(savedShifts.start));
         return shifts;
     }),
-    deleteSavedShifts: protectedProcedure
+    deleteSavedShifts: anonymousProcedure
         .input(z.array(z.string()))
         .mutation(async ({ ctx, input }) => {
+            if (!ctx.auth.session) {
+                throw new TRPCError({
+                    message: "NO SESSION FOUND",
+                    code: "UNAUTHORIZED",
+                });
+            }
+            
             for (const id of input) {
                 await ctx.db
                     .delete(savedShifts)
                     .where(
                         and(
-                            eq(savedShifts.userId, ctx.auth.user.id),
+                            eq(savedShifts.sessionId, ctx.auth.session.id),
                             eq(savedShifts.id, id),
                         ),
                     );
             }
         }),
-    freeBusy: protectedGapiProcedure
+    freeBusy: publicProcedure
         .input(
             z.object({
                 start: z.date(),
                 end: z.date(),
             }),
         )
-        .query(async ({ ctx, input }) => {
-            const { data: calendars } = await ctx.calendar.calendarList.list();
-            if (!calendars.items) {
-                throw new TRPCError({
-                    message: "FAILED TO GET GCAL CALENDARS",
-                    code: "INTERNAL_SERVER_ERROR",
-                });
-            }
-            const months = eachMonthOfInterval({
-                start: input.start,
-                end: input.end,
-            }).map((date) => ({ start: date, end: endOfMonth(date) }));
-            const calendarItems = calendars.items.filter(
-                (cal) => cal.id !== env.GOOGLE_CALENDAR_ID,
-            );
-            const items = calendarItems.map((cal) => ({ id: cal.id }));
-            const busyCalls = months.map((month) => {
-                return ctx.calendar.freebusy.query({
-                    requestBody: {
-                        items: items,
-                        timeMin: month.start.toISOString(),
-                        timeMax: month.end.toISOString(),
-                    },
-                });
-            });
-            const busyResponses = await Promise.all(busyCalls);
-            const busy = busyResponses.reduce(
-                (dataset, res) => {
-                    if (!res.data.calendars) {
-                        throw new TRPCError({
-                            message: "FAILED TO GET GCAL FREEBUSY",
-                            code: "INTERNAL_SERVER_ERROR",
-                        });
-                    }
-
-                    for (const calendarId in res.data.calendars) {
-                        if (!dataset[calendarId]) {
-                            dataset[calendarId] = {
-                                busy: [],
-                                name:
-                                    calendarItems.find(
-                                        (cal) => cal.id === calendarId,
-                                    )?.summary ?? "",
-                            };
-                        }
-                        dataset[calendarId]?.busy?.push(
-                            ...(res.data.calendars[calendarId]?.busy ?? []),
-                        );
-                    }
-                    return dataset;
-                },
-                {} as Record<string, FreeBusyCalendar>,
-            );
-            return busy;
+        .query(async () => {
+            // Return empty freebusy for portfolio version
+            return {
+                calendars: [] as string[],
+                busy: {} as Record<string, { start: Date, end: Date }[]>,
+            };
         }),
 });
 export type EventRouter = typeof eventRouter;

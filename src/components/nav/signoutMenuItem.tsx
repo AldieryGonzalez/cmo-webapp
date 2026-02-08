@@ -1,19 +1,26 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
-import { DropdownMenuItem } from "~/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
+import { useImpersonation } from "~/lib/auth/impersonation-context";
+import { useRouter } from "next/navigation";
 
-type SignOutMenuItemProps = {
-  children: React.ReactNode;
-};
+export default function SignOutMenuItem({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const router = useRouter();
+    const { setUser } = useImpersonation();
 
-const SignOutMenuItem: React.FC<SignOutMenuItemProps> = ({ children }) => {
-  const { signOut } = useClerk();
-  return (
-    <DropdownMenuItem onClick={() => signOut()} className="text-red-500">
-      {children}
-    </DropdownMenuItem>
-  );
-};
+    const handleSignOut = () => {
+        setUser(null);
+        router.push("/");
+        router.refresh();
+    };
 
-export default SignOutMenuItem;
+    return (
+        <DropdownMenuItem onClick={handleSignOut}>
+            {children}
+        </DropdownMenuItem>
+    );
+}
