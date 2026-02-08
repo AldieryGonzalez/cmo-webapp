@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { type calendar_v3 } from "@googleapis/calendar";
 import { Shift } from "./Shift";
+import { type UserLookup } from "../users/lookup";
 
 export type MatchMap = {
   filled: RegExpMatchArray[];
@@ -28,7 +29,7 @@ export class CmoEvent {
   end: Date;
   cancelled: boolean;
 
-  constructor(event: calendar_v3.Schema$Event) {
+  constructor(event: calendar_v3.Schema$Event, userLookup?: UserLookup) {
     this.title = event.summary?.replaceAll(cancelledPattern, "").trim() ?? "";
     this.location = event.location ?? "Other";
     this.id = event.id!;
@@ -75,7 +76,7 @@ export class CmoEvent {
         start: shift[3]!,
         end: shift[4]!,
         cancelled: false,
-      });
+      }, userLookup);
     });
     this.filledShifts = matchMap.filled.map((shift) => {
       roleCount[shift[3]!] = (roleCount[shift[3]!] ?? 0) + 1;
@@ -90,7 +91,7 @@ export class CmoEvent {
         end: shift[6]!,
         confirmationNote: shift[7] ?? null,
         cancelled: !!shift[1],
-      });
+      }, userLookup);
     });
 
     this.allShifts = [...this.openShifts, ...this.filledShifts].sort((a, b) => {

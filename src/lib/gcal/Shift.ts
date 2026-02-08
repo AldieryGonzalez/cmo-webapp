@@ -1,4 +1,4 @@
-import { nameToContact } from "../auth/utils";
+import { type UserLookup, findUserEmailForName } from "../users/lookup";
 import { timeStringToDate } from "../dates/utils";
 interface ShiftParams {
   id: string;
@@ -23,11 +23,11 @@ export class Shift {
   confirmationNote: string | null;
   cancelled: boolean;
 
-  constructor(obj: ShiftParams) {
+  constructor(obj: ShiftParams, userLookup?: UserLookup) {
     this.id = obj.id;
     this.eventId = obj.eventId;
     this.filledBy = obj.filledBy;
-    this.user = nameToContact(obj.filledBy)?.emailAddress ?? null;
+    this.user = userLookup ? findUserEmailForName(obj.filledBy, userLookup) : null;
     this.role = obj.role;
     this.start = timeStringToDate(obj.eventStart, obj.start);
     this.end = timeStringToDate(obj.eventEnd, obj.end);

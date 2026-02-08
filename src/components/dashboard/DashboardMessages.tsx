@@ -2,18 +2,27 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import type {
+    ResolvedEvent,
+    ResolvedShift,
+    ResolvedUser,
+} from "~/server/api/routers/messages";
+import MessageMarkdown from "./MessageMarkdown";
+
+type Message = {
+    id: string;
+    subject: string;
+    fromEmail: string;
+    toEmail: string | null;
+    sentAt: Date;
+    contentMarkdown: string;
+    resolvedShifts: Record<string, ResolvedShift>;
+    resolvedEvents: Record<string, ResolvedEvent>;
+    resolvedUsers: Record<string, ResolvedUser>;
+};
 
 type Props = {
-    messages: {
-        date: string | undefined;
-        attatchments: never[];
-        id: string | undefined;
-        from: string;
-        to: string[];
-        subject: string | undefined;
-        text: string | undefined;
-        html: string;
-    }[];
+    messages: Message[];
 };
 
 const formatDate = (date: Date) => {
@@ -22,12 +31,8 @@ const formatDate = (date: Date) => {
     return `${formattedDate} (${hoursAgo})`;
 };
 
-const DashboardMessages = ({ messages: serialMessages }: Props) => {
+const DashboardMessages = ({ messages }: Props) => {
     const [index, setIndex] = useState<number>(0);
-    const messages = serialMessages.map((message) => ({
-        ...message,
-        date: new Date(message.date ?? 0),
-    }));
     const handleNextIndex = () => {
         setIndex((prev) => (prev + 1) % messages.length);
     };
@@ -58,17 +63,20 @@ const DashboardMessages = ({ messages: serialMessages }: Props) => {
                             {message.subject}
                         </p>
                         <p className="text-sm font-normal">
-                            From: {message.from}
+                            From: {message.fromEmail}
                         </p>
-                        <p className="text-sm font-normal">To: {message.to}</p>
+                        <p className="text-sm font-normal">
+                            To: {message.toEmail ?? "Everyone"}
+                        </p>
                         <p className="text-sm font-normal">{`Sent: ${formatDate(
-                            message.date,
+                            message.sentAt,
                         )}`}</p>
                         <hr className="my-2" />
-                        <div
-                            dangerouslySetInnerHTML={{
-                                __html: message.html,
-                            }}
+                        <MessageMarkdown
+                            content={message.contentMarkdown}
+                            resolvedShifts={message.resolvedShifts}
+                            resolvedEvents={message.resolvedEvents}
+                            resolvedUsers={message.resolvedUsers}
                         />
                     </div>
                 </div>

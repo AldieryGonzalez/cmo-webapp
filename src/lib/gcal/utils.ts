@@ -24,9 +24,11 @@ const isBetween = (eventDate: Date, start: Date, end: Date) => {
 export const getEventsBetween = (
     events: CmoEvent[],
     start = new Date("2021-06-01"),
-    end = addYears(new Date(), 1),
+    end?: Date,
 ) => {
-    return events.filter((event) => isBetween(event.start, start, end));
+    // If end is not provided, use a date far in the future
+    const endDate = end ?? addYears(new Date("2023-08-01"), 1);
+    return events.filter((event) => isBetween(event.start, start, endDate));
 };
 
 export const getDateRangeFromSearchParams = (

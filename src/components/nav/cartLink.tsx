@@ -2,7 +2,9 @@
 import { api } from "~/trpc/react";
 
 const CartBadge = () => {
-    const { data: cart } = api.events.getSavedShifts.useQuery();
+    const { data: cart } = api.events.getSavedShifts.useQuery(undefined, {
+        staleTime: 30 * 1000, // 30 s — cart badge; refetched after mutations
+    });
     return (
         <span className="relative">
             <span>Cart</span>

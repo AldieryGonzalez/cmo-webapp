@@ -2,6 +2,7 @@
 
 import { isPast } from "date-fns";
 import { Contact, MoreHorizontal, XCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,16 +17,28 @@ import SaveSpecificShiftButton from "./SaveSpecificShiftButton";
 interface ShiftButtonProps {
     shift: Shift;
     isUsers: boolean;
+    highlighted?: boolean;
 }
 
-const ShiftButton: React.FC<ShiftButtonProps> = ({ shift, isUsers }) => {
+const ShiftButton: React.FC<ShiftButtonProps> = ({ shift, isUsers, highlighted }) => {
     const canRequestSub = !isPast(shift.end) && isUsers;
+    const ref = useRef<HTMLLIElement>(null);
+
+    useEffect(() => {
+        if (highlighted && ref.current) {
+            ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, [highlighted]);
+
     return (
         <li
+            ref={ref}
             className={cn({
                 ["relative w-full rounded-full border-2 bg-primary-foreground py-1 pl-4 pr-10 shadow-md"]:
                     true,
                 ["border-black/50 font-medium"]: isUsers,
+                ["ring-2 ring-purple-500 ring-offset-2 bg-purple-50 dark:bg-purple-950 dark:ring-purple-400"]:
+                    highlighted,
             })}
         >
             {stringify(shift)}

@@ -1,24 +1,21 @@
 "use client";
 
+import { Button } from "../ui/button";
+import { signOut } from "~/lib/auth/client";
 import { useRouter } from "next/navigation";
 
 export default function SignOutBtn() {
-  const router = useRouter();
-  const handleSignOut = async () => {
-    const response = await fetch("/api/sign-out", {
-      method: "POST",
-      redirect: "manual",
-    });
+    const router = useRouter();
+    
+    const handleSignOut = async () => {
+        await signOut();
+        router.push("/");
+        router.refresh();
+    };
 
-    if (response.status === 0) {
-      // redirected
-      // when using `redirect: "manual"`, response status 0 is returned
-      return router.refresh();
-    }
-  };
-  return (
-    <button onClick={handleSignOut} className="w-full text-left">
-      Sign out
-    </button>
-  );
+    return (
+        <Button variant="ghost" onClick={handleSignOut}>
+            Sign Out
+        </Button>
+    );
 }

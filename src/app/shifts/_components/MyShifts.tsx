@@ -14,28 +14,32 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "~/components/ui/popover";
-import { inEvent, roleInEvent, timeRangeString } from "~/lib/events/utils";
+import { roleInEvent, timeRangeString } from "~/lib/events/utils";
 
 type OverviewProps = {
     events: CheckedEvent[];
     searchNames: string[];
+    userEmail?: string;
 };
 
 type DaySectionProps = {
     day: string;
     events: CheckedEvent[];
     searchNames: string[];
+    userEmail?: string;
 };
 
 type ShiftCardProps = {
     event: CheckedEvent;
     searchNames: string[];
+    userEmail?: string;
 };
 
 const DaySection: React.FC<DaySectionProps> = ({
     day,
     events,
     searchNames,
+    userEmail,
 }) => {
     return (
         <div className="space-y-1">
@@ -45,13 +49,18 @@ const DaySection: React.FC<DaySectionProps> = ({
                     key={event.id}
                     event={event}
                     searchNames={searchNames}
+                    userEmail={userEmail}
                 />
             ))}
         </div>
     );
 };
 
-const ShiftCard: React.FC<ShiftCardProps> = ({ event, searchNames }) => {
+const ShiftCard: React.FC<ShiftCardProps> = ({
+    event,
+    searchNames,
+    userEmail,
+}) => {
     return (
         <Card className="relative transition-all hover:scale-x-[1.001] hover:scale-y-[1.005] hover:shadow-lg">
             <Link href={`/shifts/${event.id}`} className="block h-full w-full">
@@ -65,6 +74,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event, searchNames }) => {
                         <b className="font-semibold">{`${roleInEvent(
                             event,
                             searchNames,
+                            userEmail,
                         )}`}</b>
                         {`${
                             event.location !== undefined
@@ -100,10 +110,12 @@ const ShiftCard: React.FC<ShiftCardProps> = ({ event, searchNames }) => {
     );
 };
 
-const MyShifts: React.FC<OverviewProps> = async ({ events, searchNames }) => {
-    const myEvents = groupEventsByDay(
-        events.filter((event) => inEvent(event, searchNames)),
-    );
+const MyShifts: React.FC<OverviewProps> = ({
+    events,
+    searchNames,
+    userEmail,
+}) => {
+    const myEvents = groupEventsByDay(events);
     return (
         <TabsContent value="myShifts" className="space-y-4">
             <div className="mx-2 mb-5 flex flex-col gap-2 ">
@@ -115,6 +127,7 @@ const MyShifts: React.FC<OverviewProps> = async ({ events, searchNames }) => {
                             day={day.day}
                             events={day.events}
                             searchNames={searchNames}
+                            userEmail={userEmail}
                         />
                     );
                 })}
